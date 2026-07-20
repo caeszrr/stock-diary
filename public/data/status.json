@@ -1,0 +1,52 @@
+{
+  "tw": {
+    "lastRun": "2026-07-12T12:15:32.408Z",
+    "latestSessionDate": "2026-07-09",
+    "watchlistCount": 67,
+    "fullMarketCount": 1369,
+    "ok": true
+  },
+  "tpex": {
+    "lastRun": "2026-07-12T12:15:44.334Z",
+    "latestSessionDate": "2026-07-09",
+    "watchlistCount": 12,
+    "fullMarketCount": 10093,
+    "ok": true
+  },
+  "us": {
+    "lastRun": "2026-07-12T12:16:09.224Z",
+    "latestSessionDate": "2026-07-10",
+    "watchlistCount": 100,
+    "indexCount": 20,
+    "failures": [],
+    "ok": true
+  },
+  "backfill": {
+    "lastRun": "2026-07-12T12:34:00.992Z",
+    "range": {
+      "start": "2026-01-01",
+      "end": "2026-07-12"
+    },
+    "twseRecordCount": 5806,
+    "taiexRecordCount": 86,
+    "usRecordCount": 2427,
+    "tpexSkipped": [
+      "5347",
+      "3707",
+      "5274",
+      "8299",
+      "3260",
+      "3324",
+      "3363",
+      "3163",
+      "5371",
+      "3694",
+      "5222",
+      "3491",
+      "6919",
+      "8446",
+      "4577"
+    ],
+    "usFailures": []
+  }
+}

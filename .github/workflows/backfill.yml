@@ -1,0 +1,95 @@
+name: Backfill historical data
+
+on:
+  workflow_dispatch:
+    inputs:
+      start_date:
+        description: 'Backfill start date (YYYY-MM-DD)'
+        required: true
+        default: '2026-01-01'
+      end_date:
+        description: 'Backfill end date (YYYY-MM-DD), blank = today'
+        required: false
+        default: ''
+      symbols:
+        description: 'Optional: comma-separated symbols to limit the backfill to (e.g. 2891,ABNB). Blank = every watchlist ticker.'
+        required: false
+        default: ''
+      repair_tw_gaps:
+        description: 'Also run repair:tw-gaps afterwards (recommended for TWSE rate-limit gaps)'
+        type: boolean
+        required: false
+        default: true
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  backfill-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Backfill
+        env:
+          BACKFILL_START: ${{ inputs.start_date }}
+          BACKFILL_END: ${{ inputs.end_date }}
+          BACKFILL_SYMBOLS: ${{ inputs.symbols }}
+        run: npm run backfill
+
+      - name: Repair TWSE rate-limit gaps
+        if: inputs.repair_tw_gaps == 'true'
+        run: npm run repair:tw-gaps
+
+      - name: Check for changes
+        id: git-check
+        run: |
+          git add public/data
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push data
+        if: steps.git-check.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(data): backfill ${{ inputs.start_date }} to ${{ inputs.end_date || 'today' }}"
+          git push
+
+      - name: Setup Pages
+        if: steps.git-check.outputs.changed == 'true'
+        uses: actions/configure-pages@v5
+
+      - name: Build
+        if: steps.git-check.outputs.changed == 'true'
+        run: npm run build
+
+      - name: Upload Pages artifact
+        if: steps.git-check.outputs.changed == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        if: steps.git-check.outputs.changed == 'true'
+        id: deployment
+        uses: actions/deploy-pages@v4

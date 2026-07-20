@@ -1,0 +1,24 @@
+{
+  "name": "stock-diary",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "fetch:tw": "node scripts/fetch-tw.js",
+    "fetch:tpex": "node scripts/fetch-tpex.js",
+    "fetch:us": "node scripts/fetch-us.js",
+    "fetch:all": "npm run fetch:tw && npm run fetch:tpex && npm run fetch:us",
+    "backfill": "node scripts/backfill.js",
+    "repair:tw-gaps": "node scripts/repair-tw-gaps.js",
+    "validate": "node scripts/validate-tickers.js"
+  },
+  "devDependencies": {
+    "vite": "^8.1.1"
+  }
+}

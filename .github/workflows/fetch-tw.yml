@@ -1,0 +1,79 @@
+name: Fetch TW market data
+
+on:
+  schedule:
+    # 07:10 UTC = 15:10 Taipei, shortly after the 13:30 close. Weekdays only.
+    - cron: '10 7 * * 1-5'
+    # Retry: 08:10 UTC. Re-runs the same fetch; if the 07:10 run already got
+    # today's close, this run fetches identical data, the diff is empty, and
+    # the commit/deploy steps below are skipped automatically — so this only
+    # "acts" when the first run genuinely produced nothing yet.
+    - cron: '10 8 * * 1-5'
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  fetch-and-deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      - name: Fetch TWSE (上市) + TPEx (上櫃)
+        run: |
+          npm run fetch:tw
+          npm run fetch:tpex
+
+      - name: Check for changes
+        id: git-check
+        run: |
+          git add public/data
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push data
+        if: steps.git-check.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(data): update TW market data $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push
+
+      - name: Setup Pages
+        if: steps.git-check.outputs.changed == 'true'
+        uses: actions/configure-pages@v5
+
+      - name: Build
+        if: steps.git-check.outputs.changed == 'true'
+        run: npm run build
+
+      - name: Upload Pages artifact
+        if: steps.git-check.outputs.changed == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy to GitHub Pages
+        if: steps.git-check.outputs.changed == 'true'
+        id: deployment
+        uses: actions/deploy-pages@v4

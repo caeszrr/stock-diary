@@ -1,0 +1,846 @@
+:root {
+  --text: #2b2730;
+  --text-dim: #6b6375;
+  --bg: #ffffff;
+  --bg-alt: #f7f6f9;
+  --border: #e2e0e6;
+  --sticky-bg: #fbfafd;
+  --up: #d0342c; /* red = up, Taiwan convention */
+  --down: #1a7a3c; /* green = down, Taiwan convention */
+  --accent: #6b3fa0;
+  --sans: system-ui, 'Segoe UI', 'Noto Sans TC', Roboto, sans-serif;
+  color-scheme: light dark;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text: #ece9f1;
+    --text-dim: #a79fb0;
+    --bg: #17151c;
+    --bg-alt: #201d26;
+    --border: #322e3a;
+    --sticky-bg: #201d26;
+    --up: #ff6b61;
+    --down: #4fd97a;
+  }
+}
+
+* { box-sizing: border-box; }
+
+.hidden { display: none !important; }
+
+body {
+  margin: 0;
+  font-family: var(--sans);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+}
+
+.app-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid var(--border);
+  flex-wrap: wrap;
+}
+
+.app-header h1 {
+  font-size: 1.1rem;
+  margin: 0;
+  white-space: nowrap;
+}
+
+.status-line {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  flex: 1;
+}
+
+.roc-toggle {
+  font-size: 0.8rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-alt);
+  color: var(--text);
+  cursor: pointer;
+}
+
+.tabs-row {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0.35rem 0.75rem;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+}
+
+.tab-btn {
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 6px;
+  padding: 0.3rem 0.6rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+  min-height: 32px;
+}
+
+.tab-btn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.tab-btn.disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.matrix-wrapper {
+  flex: 1;
+  overflow: auto;
+  position: relative;
+}
+
+.loading-state,
+.empty-state {
+  padding: 2rem;
+  color: var(--text-dim);
+}
+
+table.matrix {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 0.82rem;
+}
+
+table.matrix th,
+table.matrix td {
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  padding: 0;
+}
+
+.sticky-row {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--sticky-bg);
+}
+
+.sticky-col {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: var(--sticky-bg);
+}
+
+.corner-cell.sticky-col.sticky-row {
+  z-index: 4;
+}
+
+.date-col {
+  min-width: 84px;
+  padding: 0.4rem 0.3rem;
+  text-align: center;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.name-cell {
+  min-width: 150px;
+  max-width: 150px;
+  padding: 0.4rem 0.5rem;
+  vertical-align: top;
+}
+
+.name-main {
+  font-weight: 600;
+}
+
+.name-sub {
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.group-header-row th {
+  position: sticky;
+  left: 0;
+  background: var(--bg-alt);
+  text-align: left;
+  padding: 0.3rem 0.5rem;
+  font-weight: 600;
+  border-right: none;
+}
+
+.group-toggle {
+  border: none;
+  background: none;
+  color: var(--text);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.1rem 0;
+}
+
+.pinned-indices .name-cell {
+  background: var(--bg-alt);
+}
+
+.cell {
+  min-width: 84px;
+  vertical-align: top;
+  cursor: default;
+}
+
+.cell:has(.cell-compact) {
+  cursor: pointer;
+}
+
+.cell-compact {
+  padding: 0.35rem 0.3rem;
+  text-align: center;
+  line-height: 1.3;
+}
+
+.cell-empty {
+  min-height: 2.4em;
+}
+
+.cell-close {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.cell-pct {
+  font-size: 0.75rem;
+}
+
+.chg-up .cell-close,
+.chg-up .cell-pct {
+  color: var(--up);
+}
+
+.chg-down .cell-close,
+.chg-down .cell-pct {
+  color: var(--down);
+}
+
+.chg-bold {
+  font-weight: 800;
+}
+
+.cell-detail {
+  padding: 0.3rem 0.4rem 0.5rem;
+  border-top: 1px dashed var(--border);
+  text-align: left;
+  font-size: 0.72rem;
+  color: var(--text-dim);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.detail-label {
+  color: var(--text-dim);
+}
+
+.detail-value {
+  color: var(--text);
+}
+
+/* ---- Notes: shape line + emphasis styling on the compact cell ---- */
+
+.cell-shape {
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.cell-compact.has-note {
+  position: relative;
+}
+
+.cell-compact.has-note::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+.cell-compact.note-bold .cell-close {
+  font-weight: 900;
+  text-decoration: underline;
+}
+
+.cell-compact.note-highlight {
+  background: #fdf1a8;
+}
+
+@media (prefers-color-scheme: dark) {
+  .cell-compact.note-highlight {
+    background: #5a4c14;
+  }
+}
+
+/* ---- Per-cell note editor ---- */
+
+.note-editor {
+  padding: 0.4rem;
+  border-top: 1px dashed var(--border);
+  text-align: left;
+  cursor: default;
+}
+
+.note-field {
+  display: block;
+  margin-bottom: 0.35rem;
+}
+
+.note-field-label {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+  margin-bottom: 0.15rem;
+}
+
+.note-shape,
+.note-text {
+  width: 100%;
+  font: inherit;
+  font-size: 0.78rem;
+  padding: 0.25rem 0.35rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  resize: vertical;
+}
+
+.note-emphasis {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+}
+
+.emphasis-opt {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  cursor: pointer;
+}
+
+/* ---- Per-stock profile editor (in the sticky name cell) ---- */
+
+.profile-toggle {
+  display: block;
+  margin-top: 0.2rem;
+  border: none;
+  background: none;
+  color: var(--accent);
+  font-size: 0.72rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.profile-text {
+  display: none;
+  width: 100%;
+  margin-top: 0.25rem;
+  font: inherit;
+  font-size: 0.72rem;
+  min-height: 4.5em;
+  padding: 0.3rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  resize: vertical;
+  white-space: pre-wrap;
+}
+
+.name-cell.profile-open .profile-text {
+  display: block;
+}
+
+.pending-badge {
+  display: inline-block;
+  margin-left: 0.3rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 0 0.25rem;
+  vertical-align: middle;
+}
+
+/* ---- Date header pin button + pinned-columns separator ---- */
+
+.date-label {
+  display: block;
+}
+
+.pin-btn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0.1rem 0;
+  opacity: 0.55;
+  line-height: 1;
+}
+
+.pin-btn.pinned,
+.pin-btn:hover {
+  opacity: 1;
+}
+
+th.pin-separator,
+td.pin-separator {
+  min-width: 6px;
+  width: 6px;
+  padding: 0;
+  background: var(--bg-alt);
+  border-right: 2px solid var(--accent);
+}
+
+/* ---- 大盤筆記 row ---- */
+
+.market-note-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  vertical-align: middle;
+  background: var(--bg-alt);
+}
+
+.market-note-cell {
+  padding: 0.25rem;
+  vertical-align: top;
+}
+
+.market-note-text {
+  width: 100%;
+  min-height: 2.6em;
+  font: inherit;
+  font-size: 0.72rem;
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+  color: var(--text);
+  resize: vertical;
+}
+
+/* ---- Settings button + modal ---- */
+
+.settings-btn {
+  font-size: 0.8rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-alt);
+  color: var(--text);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 1rem;
+}
+
+.modal-overlay.hidden {
+  display: none;
+}
+
+.modal-panel {
+  background: var(--bg);
+  color: var(--text);
+  border-radius: 10px;
+  max-width: 560px;
+  width: 100%;
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.8rem 1rem;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--bg);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.modal-close {
+  border: none;
+  background: none;
+  color: var(--text);
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: 0.2rem 0.4rem;
+}
+
+.modal-body {
+  padding: 1rem;
+}
+
+.settings-section {
+  margin-bottom: 1.5rem;
+}
+
+.settings-section h3 {
+  font-size: 0.95rem;
+  margin: 0 0 0.5rem;
+}
+
+.settings-note {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+  margin: 0 0 0.6rem;
+}
+
+.settings-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.btn-primary,
+.btn-secondary {
+  font-size: 0.85rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.btn-secondary {
+  background: var(--bg-alt);
+  color: var(--text);
+}
+
+.file-btn {
+  display: inline-flex;
+  align-items: center;
+}
+
+.current-mode-note {
+  margin-top: 0.4rem;
+  font-weight: 600;
+}
+
+/* ---- Row actions: hide (preloaded) / remove (user-added) ---- */
+
+.row-action {
+  display: block;
+  margin-top: 0.15rem;
+  border: none;
+  background: none;
+  font-size: 0.7rem;
+  cursor: pointer;
+  padding: 0;
+  color: var(--text-dim);
+}
+
+.row-action:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* ---- Add-stock button + dialog ---- */
+
+.add-stock-btn {
+  font-size: 0.8rem;
+  padding: 0.3rem 0.6rem;
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.market-tabs {
+  display: flex;
+  gap: 0.4rem;
+  margin-bottom: 0.8rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.market-tab {
+  border: none;
+  background: none;
+  color: var(--text-dim);
+  padding: 0.4rem 0.2rem;
+  cursor: pointer;
+  font-size: 0.85rem;
+  border-bottom: 2px solid transparent;
+}
+
+.market-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+  font-weight: 600;
+}
+
+.tab-panel.hidden {
+  display: none;
+}
+
+.field-label {
+  display: block;
+  font-size: 0.78rem;
+  color: var(--text-dim);
+  margin: 0.6rem 0 0.2rem;
+}
+
+.tab-panel input[type="text"] {
+  width: 100%;
+  font: inherit;
+  font-size: 0.88rem;
+  padding: 0.4rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.tw-results {
+  margin-top: 0.4rem;
+  max-height: 220px;
+  overflow-y: auto;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.tw-results:empty {
+  border: none;
+}
+
+.tw-result-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+  text-align: left;
+  padding: 0.45rem 0.6rem;
+  border: none;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.tw-result-item:last-child {
+  border-bottom: none;
+}
+
+.tw-result-item:hover {
+  background: var(--bg-alt);
+}
+
+.tw-result-code {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+}
+
+.tw-result-badge {
+  font-size: 0.68rem;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 4px;
+  padding: 0 0.3rem;
+}
+
+.tw-selected {
+  margin-top: 0.6rem;
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-alt);
+}
+
+.tw-selected-info {
+  font-weight: 600;
+  margin-bottom: 0.3rem;
+}
+
+.tw-add-btn,
+.us-add-btn {
+  display: block;
+  margin-top: 0.7rem;
+}
+
+.add-success {
+  color: var(--up);
+  font-size: 0.85rem;
+  margin-top: 0.6rem;
+}
+
+.us-request {
+  margin-top: 0.8rem;
+  padding: 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-alt);
+}
+
+.request-message-row {
+  display: flex;
+  gap: 0.4rem;
+}
+
+.request-message {
+  flex: 1;
+}
+
+.copy-feedback {
+  font-size: 0.78rem;
+  color: var(--accent);
+  margin: 0.3rem 0 0;
+  min-height: 1em;
+}
+
+.hidden-ticker-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.3rem 0;
+  font-size: 0.85rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.hidden-ticker-row:last-child {
+  border-bottom: none;
+}
+
+/* ---- Blank-mode empty-watchlist banner ---- */
+
+.blank-banner {
+  padding: 0.8rem 1rem;
+  background: var(--bg-alt);
+  border-bottom: 1px solid var(--border);
+  color: var(--text-dim);
+  font-size: 0.88rem;
+}
+
+/* ---- First-visit welcome screen ---- */
+
+.welcome-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.welcome-panel {
+  max-width: 560px;
+  width: 100%;
+  text-align: center;
+}
+
+.welcome-panel h1 {
+  font-size: 1.4rem;
+  margin-bottom: 0.6rem;
+}
+
+.welcome-intro {
+  color: var(--text-dim);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  margin-bottom: 1.5rem;
+}
+
+.welcome-choices {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.welcome-choice {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 1.2rem 1rem;
+  border: 2px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-alt);
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+}
+
+.welcome-choice:hover {
+  border-color: var(--accent);
+}
+
+.welcome-choice-title {
+  font-weight: 700;
+  font-size: 1.02rem;
+  color: var(--accent);
+}
+
+.welcome-choice-desc {
+  font-size: 0.82rem;
+  color: var(--text-dim);
+  line-height: 1.5;
+}
+
+@media (max-width: 640px) {
+  .app-header h1 { font-size: 1rem; }
+  .date-col, .cell { min-width: 68px; }
+  .name-cell { min-width: 110px; max-width: 110px; }
+  .welcome-choices { grid-template-columns: 1fr; }
+  .app-header { gap: 0.5rem; }
+  .add-stock-btn, .settings-btn, .roc-toggle { font-size: 0.72rem; padding: 0.25rem 0.45rem; }
+}
