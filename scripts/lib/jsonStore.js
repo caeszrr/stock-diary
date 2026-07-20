@@ -91,14 +91,9 @@ export function updateStatus(market, patch) {
   return writeJson('status.json', status, { pretty: true });
 }
 
-/**
- * Scans public/data/{tw,us,idx} on disk and writes manifest.json: the union of
- * {year: [months]} that have a data file in any of those markets. Drives the
- * frontend's year/month tabs so it never has to probe with failed fetches.
- */
-export function regenerateManifest() {
+function scanMonthsByYear(markets) {
   const monthsByYear = {};
-  for (const market of ['tw', 'us', 'idx']) {
+  for (const market of markets) {
     const marketDir = path.join(DATA_ROOT, market);
     if (!fs.existsSync(marketDir)) continue;
     for (const year of fs.readdirSync(marketDir)) {
@@ -113,9 +108,26 @@ export function regenerateManifest() {
     }
   }
   const years = Object.keys(monthsByYear).sort();
+  return { years, monthsByYear: Object.fromEntries(years.map((y) => [y, [...monthsByYear[y]].sort()])) };
+}
+
+/**
+ * Scans public/data/{tw,us,idx} on disk and writes manifest.json: the union of
+ * {year: [months]} that have a data file in any of those markets. Drives the
+ * frontend's year/month tabs so it never has to probe with failed fetches.
+ * Also includes a `twAll` section scanning tw-all/ separately — it only
+ * accumulates forward from each month's first pipeline run, so it's usually a
+ * strict subset of the main months; without its own manifest entry, the
+ * self-serve add-stock history fetch would have to guess-and-404 against
+ * months tw-all doesn't have yet.
+ */
+export function regenerateManifest() {
+  const { years, monthsByYear } = scanMonthsByYear(['tw', 'us', 'idx']);
+  const twAll = scanMonthsByYear(['tw-all']);
   const manifest = {
     years,
-    monthsByYear: Object.fromEntries(years.map((y) => [y, [...monthsByYear[y]].sort()])),
+    monthsByYear,
+    twAll,
   };
   writeJson('manifest.json', manifest, { pretty: true });
   return manifest;
