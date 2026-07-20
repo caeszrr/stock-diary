@@ -837,10 +837,28 @@ td.pin-separator {
 }
 
 @media (max-width: 640px) {
-  .app-header h1 { font-size: 1rem; }
+  .app-header h1 { font-size: 1rem; order: 1; }
   .date-col, .cell { min-width: 68px; }
   .name-cell { min-width: 110px; max-width: 110px; }
   .welcome-choices { grid-template-columns: 1fr; }
   .app-header { gap: 0.5rem; }
-  .add-stock-btn, .settings-btn, .roc-toggle { font-size: 0.72rem; padding: 0.25rem 0.45rem; }
+
+  /* Title + action buttons stay on row 1; the (often long) status line drops
+     to its own full-width row 2 instead of being squeezed into a narrow
+     column and wrapping character-by-character. */
+  #roc-toggle, #add-stock-slot, #settings-slot { order: 2; }
+  .status-line {
+    order: 3;
+    flex-basis: 100%;
+    font-size: 0.72rem;
+  }
+
+  /* Comfortable tap targets on touch devices (≥40px). */
+  .add-stock-btn, .settings-btn, .roc-toggle {
+    font-size: 0.72rem;
+    padding: 0.5rem 0.6rem;
+    min-height: 40px;
+  }
+  .pin-btn { padding: 0.35rem 0.2rem; font-size: 0.9rem; }
+  .profile-toggle, .row-action { padding: 0.3rem 0; }
 }

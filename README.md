@@ -2,9 +2,9 @@
 
 Static PWA that replaces a hand-typed Word-table daily stock diary. See
 `claude-code-prompt-stock-diary.md` for the full product spec this was built
-against. **Phases 1–5 are complete**: data pipeline, read-only matrix UI, the
-annotation layer, add-stock + start modes, and GitHub Actions + Pages deploy.
-PWA install and the docs/handoff pass are not built yet. See
+against. **Phases 1–6 are complete**: data pipeline, read-only matrix UI, the
+annotation layer, add-stock + start modes, GitHub Actions + Pages deploy, and
+PWA + mobile polish. Only the docs/handoff pass is left. See
 "What's not built yet" below.
 
 **Live site**: https://caeszrr.github.io/stock-diary/
@@ -275,11 +275,61 @@ time, see "Architecture decisions" above).
   fetch → commit → build → deploy, confirming `data/status.json` on the live
   site updated with fresh timestamps.
 
+## Phase 6 — PWA + mobile polish (decisions made while building)
+
+- **Icons**: generated with Playwright (not an image-editing tool/library) —
+  `icon.html` in a scratch dir renders a styled 股 glyph on the app's accent
+  gradient, screenshotted at each required size/viewport
+  (192/512/512-maskable/180-apple-touch/32-favicon). Simple and dependency-free;
+  regenerate the same way if the design ever needs to change.
+- **Manifest** (`public/manifest.webmanifest`): `display: standalone`,
+  `theme_color`/`background_color` matching the app's light palette,
+  `start_url`/`scope` at the site root. Referenced from `index.html` via
+  **unprefixed** root paths (`/manifest.webmanifest`, `/icons/...`) — Vite
+  rewrites these to include `base` (`/stock-diary/...`) automatically in both
+  `npm run dev` and `npm run build`. Hardcoding the `/stock-diary/` prefix
+  manually was tried first and broke in dev only: Vite's dev-server HTML
+  transform prepends `base` unconditionally, so an already-prefixed literal
+  got doubled to `/stock-diary/stock-diary/...` (build output was fine
+  either way, since it doesn't re-prepend an already-resolved path — the dev
+  and build code paths disagree here, unprefixed is the one that works in
+  both). If the repo is ever renamed, update `vite.config.js`'s `BASE_PATH`
+  only — these paths don't need to change since they're base-relative.
+- **Service worker** (`public/sw.js`): no build-time precache manifest (Vite
+  output filenames are content-hashed and change every deploy). Instead:
+  cache-first + stale-while-revalidate for everything except `/data/` paths,
+  network-first-with-cache-fallback for `/data/` (quote JSON). Registered
+  from `main.js` on `window.load`, scoped to the app automatically since
+  `sw.js` lives at the site root under `base`.
+- **First-visit vs. later-visit caching**: the very first page load's own
+  shell requests happen before the newly-registering service worker can
+  control the page (standard SW lifecycle — `clients.claim()` only affects
+  requests from the next navigation onward). The shell becomes available
+  offline starting from the visitor's second visit/reload; this is normal
+  PWA behavior, not a bug, and doesn't affect quote data (which is
+  network-first regardless and only needs the cache fallback once it's been
+  fetched at least once).
+- **Mobile header**: the status line ("TW上市 最後更新：…") was wrapping
+  character-by-character on narrow screens because it shared a flex row with
+  the title and action buttons. Fixed with `order`/`flex-basis: 100%` in the
+  `max-width: 640px` media query so title+buttons stay on one row and the
+  status line gets its own full-width row below. Also bumped action buttons
+  to a 40px minimum touch target on mobile.
+- **Verified**: manifest fetches with zero errors from Chrome's own
+  `Page.getAppManifest` (CDP) parser; service worker reaches `activated`
+  state; a real offline reload (`context.setOffline(true)`, second visit)
+  renders the full matrix with real cached data and zero errors — confirms
+  both the shell cache and the data cache-fallback actually work, not just
+  that the code compiles. **Not verified by me** (needs a real device, not
+  headless automation): the actual "Install" button/desktop icon + standalone
+  window in a real Chrome/Edge window, and "加入主畫面" on a real phone — see
+  the note left for you in the final handoff.
+
 ## What's not built yet
 
-Per the full spec in `claude-code-prompt-stock-diary.md`, phases 6-8 are not
-implemented in this repo yet: PWA (manifest/service worker/install) and the
-maintainer/user docs + handoff pass.
+Per the full spec in `claude-code-prompt-stock-diary.md`, phase 7 (docs +
+handoff) is the only thing left; phase 8 (Cloudflare Worker) is intentionally
+skipped, see below.
 
 ## Local development
 

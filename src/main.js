@@ -1,4 +1,13 @@
 import './style.css';
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register(`${import.meta.env.BASE_URL}sw.js`).catch((err) => {
+      console.error('stock-diary: service worker registration failed', err);
+    });
+  });
+}
+
 import { loadManifest, loadStatus, loadMonth } from './lib/loadMonth.js';
 import { renderTabs } from './components/yearMonthTabs.js';
 import { renderMatrix } from './components/matrix.js';
