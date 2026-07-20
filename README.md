@@ -2,9 +2,13 @@
 
 Static PWA that replaces a hand-typed Word-table daily stock diary. See
 `claude-code-prompt-stock-diary.md` for the full product spec this was built
-against. **Phases 1–4 are complete**: data pipeline, read-only matrix UI, the
-annotation layer, and add-stock + start modes. GitHub Actions cron + Pages
-deploy and PWA install are not built yet. See "What's not built yet" below.
+against. **Phases 1–5 are complete**: data pipeline, read-only matrix UI, the
+annotation layer, add-stock + start modes, and GitHub Actions + Pages deploy.
+PWA install and the docs/handoff pass are not built yet. See
+"What's not built yet" below.
+
+**Live site**: https://caeszrr.github.io/stock-diary/
+**Repo**: https://github.com/caeszrr/stock-diary
 
 ## Architecture decisions made while building
 
@@ -228,11 +232,54 @@ time, see "Architecture decisions" above).
   no matching CSS rule, so `display: none` never actually applied — added a
   generic `.hidden { display: none !important; }` utility.)
 
+## Phase 5 — GitHub Actions + Pages deploy (decisions made while building)
+
+- **Four workflows**, each self-contained (no reusable/`workflow_call` chain)
+  so a beginner reading Actions logs can follow one file top to bottom:
+  - `fetch-tw.yml` — cron `10 7 * * 1-5` + retry `10 8 * * 1-5` (UTC). Runs
+    `fetch:tw` + `fetch:tpex`.
+  - `fetch-us.yml` — cron `30 22 * * 2-6` + retry `30 23 * * 2-6` (UTC). Runs
+    `fetch:us`.
+  - `backfill.yml` — `workflow_dispatch` only, inputs `start_date`,
+    `end_date`, optional `symbols` (comma-separated — added
+    `BACKFILL_SYMBOLS` env var support to `scripts/backfill.js` for this),
+    and a `repair_tw_gaps` checkbox.
+  - `deploy.yml` — plain `on: push` to `main`, for ordinary code/config
+    changes (e.g. editing `config/tickers.json`) pushed by the maintainer.
+- **Retry-only-if-needed, without extra state**: the retry cron just re-runs
+  the same fetch. If the first run already got the data, the second run
+  fetches the identical thing, the `git diff` against `public/data/` is
+  empty, and the commit/build/deploy steps (all gated on
+  `steps.git-check.outputs.changed == 'true'`) are skipped — a true no-op.
+  This reuses the existing "no data → no diff" behavior already in
+  `fetch-tw.js`/`fetch-us.js`/`jsonStore.js` from Phase 1, no new logic
+  needed there.
+- **Why fetch/backfill workflows build+deploy themselves** instead of
+  triggering `deploy.yml`: pushes made with the default `GITHUB_TOKEN` inside
+  a workflow do **not** re-trigger other `on: push` workflows (GitHub's
+  loop-prevention). So each data workflow does its own
+  build → `upload-pages-artifact` → `deploy-pages` right after committing.
+  `deploy.yml`'s `on: push` only ever fires from the maintainer's own
+  (human-authenticated) pushes, so there's no double-deploy.
+- **Pages source**: set to "GitHub Actions" via
+  `gh api -X POST repos/OWNER/REPO/pages -f build_type=workflow` (one-time,
+  done during setup) rather than the Settings UI — same effect, one command.
+- **Repo**: `caeszrr/stock-diary`, public (required for free GitHub Pages).
+  Git commit identity for both the maintainer's own commits and the
+  workflows' bot commits: `caeszrr` /
+  `caeszrr@users.noreply.github.com`.
+- **Verified live**, not just locally: cold-loaded the deployed URL with
+  Playwright (desktop + mobile, zero console errors, real prices rendered),
+  then manually dispatched all four workflows once each via
+  `gh workflow run` and watched them through to a successful
+  fetch → commit → build → deploy, confirming `data/status.json` on the live
+  site updated with fresh timestamps.
+
 ## What's not built yet
 
-Per the full spec in `claude-code-prompt-stock-diary.md`, phases 5-8 are not
-implemented in this repo yet: GitHub Actions cron schedules + Pages deploy,
-PWA (manifest/service worker/install), and the maintainer/user docs pass.
+Per the full spec in `claude-code-prompt-stock-diary.md`, phases 6-8 are not
+implemented in this repo yet: PWA (manifest/service worker/install) and the
+maintainer/user docs + handoff pass.
 
 ## Local development
 
