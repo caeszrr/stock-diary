@@ -1,16 +1,16 @@
 {
   "tw": {
-    "lastRun": "2026-07-12T12:15:32.408Z",
-    "latestSessionDate": "2026-07-09",
+    "lastRun": "2026-07-20T18:34:19.674Z",
+    "latestSessionDate": "2026-07-17",
     "watchlistCount": 67,
-    "fullMarketCount": 1369,
+    "fullMarketCount": 1371,
     "ok": true
   },
   "tpex": {
-    "lastRun": "2026-07-12T12:15:44.334Z",
-    "latestSessionDate": "2026-07-09",
-    "watchlistCount": 12,
-    "fullMarketCount": 10093,
+    "lastRun": "2026-07-20T18:34:42.023Z",
+    "latestSessionDate": "2026-07-20",
+    "watchlistCount": 13,
+    "fullMarketCount": 10030,
     "ok": true
   },
   "us": {
