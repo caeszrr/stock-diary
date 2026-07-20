@@ -571,6 +571,20 @@ td.pin-separator {
   font-weight: 600;
 }
 
+.settings-field-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin: 0.8rem 0 0.3rem;
+}
+
+.settings-steps {
+  margin: 0 0 0.6rem;
+  padding-left: 1.3rem;
+  font-size: 0.85rem;
+  line-height: 1.7;
+  color: var(--text);
+}
+
 /* ---- Row actions: hide (preloaded) / remove (user-added) ---- */
 
 .row-action {

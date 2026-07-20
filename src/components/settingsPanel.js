@@ -41,6 +41,24 @@ export function renderSettings(container, { onStartModeChange, onUnhideTicker, e
     return div;
   }
 
+  // 使用說明
+  const helpSection = section('使用說明', `
+    <p class="settings-note">股票日記會在每個交易日收盤後自動更新價格，您只需要打開網頁查看、記筆記即可，不需要手動做任何操作。</p>
+    <p class="settings-field-label">安裝到電腦（Chrome / Edge）</p>
+    <ol class="settings-steps">
+      <li>用 Chrome 或 Edge 開啟這個網站</li>
+      <li>點網址列最右邊的安裝圖示（或按右上角選單 ⋮ → 「安裝股票日記」）</li>
+      <li>按「安裝」，桌面就會出現捷徑，之後點它開啟是獨立視窗，不用再找瀏覽器分頁</li>
+    </ol>
+    <p class="settings-field-label">安裝到手機</p>
+    <ol class="settings-steps">
+      <li><strong>Android（Chrome）</strong>：右上角選單 ⋮ → 「新增至主畫面」或「安裝應用程式」→ 確認</li>
+      <li><strong>iPhone（Safari）</strong>：底部的分享圖示 ⬆ → 往下找「加入主畫面」→ 確認</li>
+    </ol>
+    <p class="settings-note">⚠️ 重要：您的筆記、標記、自選股清單都只存在<strong>這台裝置的這個瀏覽器</strong>裡，換手機、換電腦或清除瀏覽器資料都不會跟著走。請定期到下方「備份與還原」匯出備份存檔。</p>
+  `);
+  body.appendChild(helpSection);
+
   // 備份與還原
   const backupSection = section('備份與還原', `
     <p class="settings-note">您的所有筆記、標記、自選股都只儲存在<strong>這台裝置的瀏覽器</strong>裡，不會自動上傳。

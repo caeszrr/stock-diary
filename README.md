@@ -2,10 +2,10 @@
 
 Static PWA that replaces a hand-typed Word-table daily stock diary. See
 `claude-code-prompt-stock-diary.md` for the full product spec this was built
-against. **Phases 1–6 are complete**: data pipeline, read-only matrix UI, the
-annotation layer, add-stock + start modes, GitHub Actions + Pages deploy, and
-PWA + mobile polish. Only the docs/handoff pass is left. See
-"What's not built yet" below.
+against. **All 7 planned phases are complete** (Phase 8 intentionally
+skipped, see below): data pipeline, read-only matrix UI, the annotation
+layer, add-stock + start modes, GitHub Actions + Pages deploy, PWA + mobile
+polish, and this docs/handoff pass.
 
 **Live site**: https://caeszrr.github.io/stock-diary/
 **Repo**: https://github.com/caeszrr/stock-diary
@@ -136,11 +136,51 @@ the ~110-symbol watchlist gets historical backfill.
 
 ## Adding/removing a ticker
 
-Edit `config/tickers.json` (schema: `{ symbol, market: "index"|"us"|"twse"|"tpex", name_zh, group, verify?, status? }`),
-then run `npm run validate` to confirm it resolves, then `npm run fetch:all`
-(and `npm run backfill` if you want its history filled in too). The frontend
-picks up the new entry on the next `npm run build` (it's bundled at build
-time, see "Architecture decisions" above).
+**Easiest way (no local setup needed, just a browser):**
+1. On GitHub, open `config/tickers.json`, click the pencil (✏️ Edit) icon.
+2. Add/remove an entry — schema: `{ symbol, market: "index"|"us"|"twse"|"tpex", name_zh, group, verify?, status? }`.
+3. Commit directly to `main` (bottom of the page). This alone triggers
+   `deploy.yml`, which rebuilds and redeploys the site with the new ticker
+   showing up in the list (blank history until the next steps).
+4. To fill in its history: repo → **Actions** tab → **Backfill historical
+   data** (left sidebar) → **Run workflow** → fill in `symbols` with just the
+   new ticker's code (e.g. `2891`) to keep it fast, leave the date range at
+   the defaults → **Run workflow**. It commits and redeploys automatically
+   when done (watch it under the Actions tab).
+
+**With a local clone:** edit `config/tickers.json`, run `npm run validate` to
+confirm it resolves, `npm run fetch:all` (or `npm run backfill` for history),
+then commit + push — `npm run build` isn't needed locally, Actions builds on
+push.
+
+## Maintainer runbook: when a data source breaks
+
+Check `data/status.json` on the live site first
+(`https://caeszrr.github.io/stock-diary/data/status.json`) — each market's
+`lastRun`/`latestSessionDate`/`ok` tells you which pipeline actually ran and
+whether it got data. Then check the failing workflow's logs: repo → Actions
+tab → click the red ✗ run → expand the failing step.
+
+| Symptom | Likely cause | What to do |
+|---|---|---|
+| `tw`/`tpex` stale for >1 trading day, workflow shows green | TWSE/TPEx changed their API shape or started blocking the runner's IP | Check `scripts/lib/twse.js`/`scripts/lib/tpex.js` against the live endpoint URLs in "Data sources" above; a 200 response with unexpected JSON shape usually means a field got renamed |
+| `us` stale, workflow shows green | Yahoo Finance chart API returned an unexpected shape, or rate-limited | `scripts/lib/yahoo.js` already fails over `query1` → `query2`; if both fail, check `usFailures` in `status.json`'s `backfill`/`us` entries for the exact symbols/errors |
+| A whole workflow run is red (failed) | Node/npm error, not a data-source issue | Open the failing step's log directly — usually a stack trace pointing at the exact line |
+| One symbol just stopped appearing | Delisted, or code changed | Re-run `npm run validate` (locally or by checking its report format) — it marks unresolved symbols `"status": "unresolved"` without deleting them, exactly like the 3 tickers noted in "Unresolved tickers" above |
+| Retry run (08:10/23:30 UTC) always seems to do nothing | This is expected when the 07:10/22:30 run already succeeded — see "Phase 5" below for why the retry is a deliberate no-op in that case, not a sign anything is broken |
+
+## Future work (Phase 8 — skipped)
+
+The spec's optional Phase 8 (a Cloudflare Worker queue making US stock
+additions fully self-serve, so requests wouldn't need a manual
+`config/tickers.json` edit) was intentionally skipped to stay inside the
+$0/no-server constraint with the simplest possible setup. The current US
+"assisted add" flow (in-app pending row + copyable request message, see
+Phase 4 below) covers the same need with one manual step from the
+maintainer. If this is worth automating later: the Worker would receive add
+requests, store them (e.g. KV), and the `fetch-us.yml`/`backfill.yml`
+workflows would read pending requests from it before running — no other
+architecture change needed.
 
 ## Phase 3 — Annotation layer (decisions made while building)
 
@@ -325,11 +365,27 @@ time, see "Architecture decisions" above).
   window in a real Chrome/Edge window, and "加入主畫面" on a real phone — see
   the note left for you in the final handoff.
 
+## Phase 7 — Docs + handoff (decisions made while building)
+
+- **In-app 使用說明**: added as the first section in 設定 (settings), ahead
+  of backup — install steps for desktop (Chrome/Edge) and phone
+  (Android/iPhone), plus a repeated backup warning right where the user is
+  already looking at 匯出備份/匯入備份.
+- **Maintainer runbook**: added a GitHub-web-only path for adding/removing a
+  ticker (edit `config/tickers.json` in the GitHub UI → commit → optionally
+  run the "Backfill historical data" Action with just the new symbol) so the
+  maintainer never strictly needs a local clone for routine changes. Added a
+  symptom → cause → fix table for when a data source breaks, pointing at
+  `data/status.json` and the Actions logs first.
+- **`handoff.txt`**: a friendly zh-TW message (LINE-ready) with the live URL,
+  3-step install for laptop and phone, the daily auto-update behavior, the
+  上櫃 no-backfill caveat, and a backup reminder — see the file itself.
+
 ## What's not built yet
 
-Per the full spec in `claude-code-prompt-stock-diary.md`, phase 7 (docs +
-handoff) is the only thing left; phase 8 (Cloudflare Worker) is intentionally
-skipped, see below.
+Nothing from the required phases (1–7). Phase 8 (Cloudflare Worker for
+fully-self-serve US adds) was optional and is intentionally skipped — see
+"Future work (Phase 8 — skipped)" above for what it would take to add later.
 
 ## Local development
 
