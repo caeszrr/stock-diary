@@ -22,15 +22,29 @@
     "ok": true
   },
   "backfill": {
-    "lastRun": "2026-07-20T18:36:40.406Z",
+    "lastRun": "2026-07-20T20:19:09.596Z",
     "range": {
-      "start": "2026-07-01",
-      "end": "2026-07-20"
+      "start": "2026-07-20",
+      "end": "2026-07-21"
     },
-    "twseRecordCount": 0,
-    "taiexRecordCount": 13,
-    "usRecordCount": 0,
-    "tpexSkipped": [],
+    "twseRecordCount": 871,
+    "taiexRecordCount": 1,
+    "usRecordCount": 20,
+    "tpexSkipped": [
+      "5347",
+      "3707",
+      "5274",
+      "8299",
+      "3260",
+      "3324",
+      "3363",
+      "3163",
+      "5371",
+      "3491",
+      "8446",
+      "4577",
+      "00687B"
+    ],
     "usFailures": []
   }
 }
