@@ -63,9 +63,21 @@ function scheduleWrite() {
   writeTimer = setTimeout(flush, WRITE_DEBOUNCE_MS);
 }
 
-window.addEventListener('beforeunload', flush);
+/**
+ * Opportunistic flush for tab-close/backgrounding: only writes if a debounced
+ * save is actually pending (i.e. `writeTimer` is set). Flushing unconditionally
+ * here would re-save the in-memory `cache` even when nothing changed since the
+ * last save — including re-writing over storage that was cleared externally
+ * (browser "clear site data", devtools) while this tab stayed open, silently
+ * undoing that clear the moment the tab backgrounds or closes.
+ */
+function flushIfPending() {
+  if (writeTimer) flush();
+}
+
+window.addEventListener('beforeunload', flushIfPending);
 window.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'hidden') flush();
+  if (document.visibilityState === 'hidden') flushIfPending();
 });
 
 export function getState() {
