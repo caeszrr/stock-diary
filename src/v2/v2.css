@@ -1,0 +1,211 @@
+/* v2 樣式。色彩/間距/字階一律用 tokens(tokens.css + 全域 --up/--down/--accent)。 */
+
+.v2-root {
+  display: flex;
+  min-height: 100vh;
+  font-size: var(--fs-base);
+  background: var(--bg);
+  color: var(--text);
+}
+
+.num, .v2-root input[type="number"] { font-variant-numeric: tabular-nums; }
+
+/* ---------- 側欄 ---------- */
+.v2-sidebar {
+  width: 200px;
+  flex-shrink: 0;
+  border-right: 1px solid var(--border);
+  background: var(--bg-alt);
+  display: flex;
+  flex-direction: column;
+  padding: var(--sp-4);
+  gap: var(--sp-4);
+}
+.v2-brand { font-size: var(--fs-lg); font-weight: 700; }
+.v2-badge {
+  background: var(--accent); color: #fff;
+  border-radius: var(--r-sm); padding: 0 var(--sp-2);
+  font-size: var(--fs-base);
+}
+.v2-nav { display: flex; flex-direction: column; gap: var(--sp-2); }
+.v2-nav-item {
+  display: flex; align-items: center;
+  min-height: var(--tap);
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-sm);
+  color: var(--text);
+  text-decoration: none;
+  font-size: var(--fs-lg);
+}
+.v2-nav-item:hover { background: var(--bg); }
+.v2-nav-active { background: var(--accent); color: #fff; font-weight: 700; }
+.v2-nav-active:hover { background: var(--accent); }
+.v2-nav-disabled { color: var(--text-dim); cursor: not-allowed; opacity: 0.6; }
+.v2-back-v1 { margin-top: auto; color: var(--text-dim); font-size: var(--fs-base); min-height: var(--tap); display: flex; align-items: center; }
+
+/* ---------- 主欄 ---------- */
+.v2-maincol { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.v2-topbar {
+  display: flex; flex-wrap: wrap; align-items: center; gap: var(--sp-4);
+  padding: var(--sp-3) var(--sp-5);
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-alt);
+  font-size: var(--fs-base);
+  min-height: var(--tap);
+}
+.v2-status-item { color: var(--text-dim); }
+.v2-status-off { opacity: 0.75; }
+.v2-status-dry {
+  border: 1px solid var(--accent); color: var(--accent);
+  border-radius: var(--r-sm); padding: var(--sp-1) var(--sp-2); font-weight: 700;
+}
+.v2-page { padding: var(--sp-5); max-width: 1080px; width: 100%; margin: 0 auto; }
+.v2-page-title { font-size: var(--fs-xl); margin: 0 0 var(--sp-4); }
+
+/* ---------- 卡片(解剖律:標題+關鍵數字+一個主動作+一個⋯) ---------- */
+.v2-card {
+  background: var(--bg-alt);
+  border: 1px solid var(--border);
+  border-radius: var(--r-md);
+  box-shadow: var(--shadow-card);
+  padding: var(--sp-4);
+  margin-bottom: var(--sp-4);
+}
+.v2-card-title { font-size: var(--fs-lg); margin: 0 0 var(--sp-3); display: flex; align-items: center; gap: var(--sp-2); }
+.v2-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
+.v2-num-key { font-size: var(--fs-num); font-variant-numeric: tabular-nums; font-weight: 700; margin: var(--sp-2) 0; }
+.v2-num-lg { font-size: var(--fs-num-lg); font-variant-numeric: tabular-nums; font-weight: 700; }
+.v2-hint { color: var(--text-dim); font-size: var(--fs-base); margin: var(--sp-2) 0; }
+.v2-empty { color: var(--text-dim); margin: var(--sp-3) 0; }
+
+/* ---------- 按鈕/欄位(觸控 ≥44px) ---------- */
+.v2-btn {
+  min-height: var(--tap); min-width: var(--tap);
+  padding: 0 var(--sp-4);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--text);
+  font-size: var(--fs-base);
+  cursor: pointer;
+}
+.v2-btn:hover { border-color: var(--accent); }
+.v2-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.v2-btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+.v2-btn-danger { color: var(--up); border-color: var(--up); }
+.v2-btn-more { font-weight: 700; letter-spacing: 2px; }
+
+.v2-field { display: flex; flex-direction: column; gap: var(--sp-1); font-size: var(--fs-base); }
+.v2-field > span { color: var(--text-dim); }
+.v2-field input, .v2-field select, .v2-field textarea {
+  min-height: var(--tap);
+  font-size: var(--fs-num);
+  padding: var(--sp-2) var(--sp-3);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  background: var(--bg);
+  color: var(--text);
+  width: 100%;
+}
+.v2-field input:disabled, .v2-field select:disabled, .v2-field textarea:disabled { opacity: 0.55; }
+.v2-field-row { display: flex; flex-wrap: wrap; gap: var(--sp-3); align-items: end; }
+.v2-field-row .v2-field { flex: 1; min-width: 120px; }
+
+/* ---------- 漲跌色(唯一來源 --up/--down) ---------- */
+.v2-up { color: var(--up); }
+.v2-down { color: var(--down); }
+.v2-flat { color: var(--text-dim); }
+
+/* ---------- 七步進度指示 ---------- */
+.v2-steps {
+  display: flex; flex-wrap: wrap; gap: var(--sp-2);
+  margin-bottom: var(--sp-4);
+}
+.v2-step {
+  display: flex; align-items: center; gap: var(--sp-1);
+  min-height: var(--tap);
+  padding: 0 var(--sp-3);
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+  color: var(--text-dim);
+  font-size: var(--fs-base);
+  text-decoration: none;
+}
+.v2-step-done { border-color: var(--accent); color: var(--text); }
+.v2-step-done::before { content: '✓ '; color: var(--accent); font-weight: 700; }
+.v2-step-current { background: var(--accent); color: #fff; font-weight: 700; border-color: var(--accent); }
+
+/* ---------- 唯讀提示條 / 警示條 ---------- */
+.v2-readonly-banner, .v2-alert-banner {
+  border-radius: var(--r-md);
+  padding: var(--sp-3) var(--sp-4);
+  margin-bottom: var(--sp-4);
+  font-size: var(--fs-lg);
+  border: 1px solid var(--border);
+  background: var(--bg-alt);
+  color: var(--text-dim);
+}
+.v2-alert-banner {
+  border-color: var(--up);
+  color: var(--up);
+  font-weight: 700;
+}
+
+/* ---------- 距離條(S3) ---------- */
+.v2-distbar { height: 12px; border-radius: var(--r-sm); background: var(--border); overflow: hidden; margin: var(--sp-2) 0; }
+.v2-distbar-fill { height: 100%; background: var(--accent); }
+.v2-distbar-near { background: var(--up); }
+
+/* ---------- AiSlot(預設收合占位) ---------- */
+.v2-aislot { margin-top: var(--sp-3); color: var(--text-dim); font-size: var(--fs-base); }
+.v2-aislot summary { cursor: pointer; min-height: var(--tap); display: flex; align-items: center; }
+.v2-aislot-body { margin: var(--sp-2) 0 0; }
+
+/* ---------- 表格(S7 結算/金庫清單) ---------- */
+.v2-table-wrap { overflow-x: auto; }
+.v2-table { border-collapse: collapse; width: 100%; font-size: var(--fs-base); }
+.v2-table th, .v2-table td {
+  border-bottom: 1px solid var(--border);
+  padding: var(--sp-2) var(--sp-3);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.v2-table th:first-child, .v2-table td:first-child { text-align: left; }
+.v2-table th { color: var(--text-dim); font-weight: 400; }
+
+/* ---------- 紀錄檢視 ---------- */
+.v2-log {
+  font-size: 14px; overflow-x: auto; background: var(--bg);
+  border: 1px solid var(--border); border-radius: var(--r-sm); padding: var(--sp-3);
+}
+
+/* ---------- 鏈條關係(S5) ---------- */
+.v2-chain-tag {
+  display: inline-flex; align-items: center; gap: var(--sp-1);
+  border: 1px solid var(--accent); color: var(--accent);
+  border-radius: var(--r-sm); padding: var(--sp-1) var(--sp-2);
+  font-size: var(--fs-base);
+}
+
+/* ---------- 對話框 ---------- */
+.v2-dialog { border: none; border-radius: var(--r-md); box-shadow: var(--shadow-card); padding: 0; max-width: 520px; width: calc(100% - 2 * var(--sp-5)); background: var(--bg); color: var(--text); font-size: var(--fs-base); }
+.v2-dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+.v2-dialog-body { padding: var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-4); }
+.v2-dialog-title { font-size: var(--fs-num); font-weight: 700; margin: 0; }
+.v2-dialog-actions { display: flex; gap: var(--sp-3); justify-content: flex-end; flex-wrap: wrap; }
+
+/* ---------- 窄螢幕:側欄轉頂列 ---------- */
+@media (max-width: 760px) {
+  .v2-root { flex-direction: column; }
+  .v2-sidebar {
+    width: auto; flex-direction: row; align-items: center;
+    border-right: none; border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+  }
+  .v2-brand { white-space: nowrap; }
+  .v2-nav { flex-direction: row; }
+  .v2-back-v1 { margin-top: 0; margin-left: auto; white-space: nowrap; }
+  .v2-page { padding: var(--sp-4); }
+}

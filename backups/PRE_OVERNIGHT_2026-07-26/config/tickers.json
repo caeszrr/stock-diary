@@ -1,0 +1,666 @@
+{
+  "comment": "Preloaded watchlist extracted 1:1 from the user's Word file (1150629新波段.docx). market: index | us | twse (上市) | tpex (上櫃). verify:true = newer/uncertain listing — pipeline must validate on first run and report. Official names used where the doc had shorthand (金國光→今國光, 臻頂ky→臻鼎-KY, 耀華→燿華, Mravel→MRVL).",
+  "tickers": [
+    {
+      "symbol": "TAIEX",
+      "market": "index",
+      "name_zh": "加權指數",
+      "group": "指數"
+    },
+    {
+      "symbol": "DJI",
+      "market": "index",
+      "name_zh": "道瓊工業",
+      "group": "指數"
+    },
+    {
+      "symbol": "IXIC",
+      "market": "index",
+      "name_zh": "那斯達克",
+      "group": "指數"
+    },
+    {
+      "symbol": "SPX",
+      "market": "index",
+      "name_zh": "標普500",
+      "group": "指數"
+    },
+    {
+      "symbol": "SOX",
+      "market": "index",
+      "name_zh": "費城半導體",
+      "group": "指數"
+    },
+    {
+      "symbol": "ARM",
+      "market": "us",
+      "name_zh": "安謀 Arm Holdings",
+      "group": "美股-AI與晶片"
+    },
+    {
+      "symbol": "NVDA",
+      "market": "us",
+      "name_zh": "輝達 NVIDIA",
+      "group": "美股-AI與晶片"
+    },
+    {
+      "symbol": "AMD",
+      "market": "us",
+      "name_zh": "超微 AMD",
+      "group": "美股-AI與晶片"
+    },
+    {
+      "symbol": "MRVL",
+      "market": "us",
+      "name_zh": "邁威爾 Marvell",
+      "group": "美股-AI與晶片"
+    },
+    {
+      "symbol": "TSM",
+      "market": "us",
+      "name_zh": "台積電ADR",
+      "group": "美股-AI與晶片"
+    },
+    {
+      "symbol": "INTC",
+      "market": "us",
+      "name_zh": "英特爾 Intel",
+      "group": "美股-AI與晶片"
+    },
+    {
+      "symbol": "MU",
+      "market": "us",
+      "name_zh": "美光 Micron",
+      "group": "美股-記憶體儲存"
+    },
+    {
+      "symbol": "SNDK",
+      "market": "us",
+      "name_zh": "晟碟 Sandisk",
+      "group": "美股-記憶體儲存"
+    },
+    {
+      "symbol": "STX",
+      "market": "us",
+      "name_zh": "希捷 Seagate",
+      "group": "美股-記憶體儲存"
+    },
+    {
+      "symbol": "DRAM",
+      "market": "us",
+      "name_zh": "Roundhill 記憶體ETF",
+      "group": "美股-記憶體儲存",
+      "verify": true
+    },
+    {
+      "symbol": "LITE",
+      "market": "us",
+      "name_zh": "Lumentum",
+      "group": "美股-光通訊玻璃"
+    },
+    {
+      "symbol": "GLW",
+      "market": "us",
+      "name_zh": "康寧 Corning",
+      "group": "美股-光通訊玻璃"
+    },
+    {
+      "symbol": "GOOG",
+      "market": "us",
+      "name_zh": "Alphabet C",
+      "group": "美股-科技巨頭"
+    },
+    {
+      "symbol": "AAPL",
+      "market": "us",
+      "name_zh": "蘋果 Apple",
+      "group": "美股-科技巨頭"
+    },
+    {
+      "symbol": "AMZN",
+      "market": "us",
+      "name_zh": "亞馬遜 Amazon",
+      "group": "美股-科技巨頭"
+    },
+    {
+      "symbol": "TSLA",
+      "market": "us",
+      "name_zh": "特斯拉 Tesla",
+      "group": "美股-科技巨頭"
+    },
+    {
+      "symbol": "ORCL",
+      "market": "us",
+      "name_zh": "甲骨文 Oracle",
+      "group": "美股-科技巨頭"
+    },
+    {
+      "symbol": "SPCX",
+      "market": "us",
+      "name_zh": "SpaceX",
+      "group": "美股-科技巨頭",
+      "verify": true
+    },
+    {
+      "symbol": "MP",
+      "market": "us",
+      "name_zh": "MP Materials 稀土",
+      "group": "美股-其他"
+    },
+    {
+      "symbol": "GOOP",
+      "market": "us",
+      "name_zh": "Kurv Google 溢價收益ETF",
+      "group": "美股-其他",
+      "verify": true
+    },
+    {
+      "symbol": "2330",
+      "market": "twse",
+      "name_zh": "台積電",
+      "group": "台股-晶圓IC設計"
+    },
+    {
+      "symbol": "2454",
+      "market": "twse",
+      "name_zh": "聯發科",
+      "group": "台股-晶圓IC設計"
+    },
+    {
+      "symbol": "3443",
+      "market": "twse",
+      "name_zh": "創意",
+      "group": "台股-晶圓IC設計"
+    },
+    {
+      "symbol": "5347",
+      "market": "tpex",
+      "name_zh": "世界先進",
+      "group": "台股-晶圓IC設計"
+    },
+    {
+      "symbol": "2303",
+      "market": "twse",
+      "name_zh": "聯電",
+      "group": "台股-晶圓IC設計"
+    },
+    {
+      "symbol": "6770",
+      "market": "twse",
+      "name_zh": "力積電",
+      "group": "台股-晶圓IC設計"
+    },
+    {
+      "symbol": "3707",
+      "market": "tpex",
+      "name_zh": "漢磊",
+      "group": "台股-晶圓IC設計"
+    },
+    {
+      "symbol": "2388",
+      "market": "twse",
+      "name_zh": "威盛",
+      "group": "台股-晶圓IC設計"
+    },
+    {
+      "symbol": "5274",
+      "market": "tpex",
+      "name_zh": "信驊",
+      "group": "台股-晶圓IC設計"
+    },
+    {
+      "symbol": "2408",
+      "market": "twse",
+      "name_zh": "南亞科",
+      "group": "台股-記憶體"
+    },
+    {
+      "symbol": "2344",
+      "market": "twse",
+      "name_zh": "華邦電",
+      "group": "台股-記憶體"
+    },
+    {
+      "symbol": "2337",
+      "market": "twse",
+      "name_zh": "旺宏",
+      "group": "台股-記憶體"
+    },
+    {
+      "symbol": "8299",
+      "market": "tpex",
+      "name_zh": "群聯",
+      "group": "台股-記憶體"
+    },
+    {
+      "symbol": "3006",
+      "market": "twse",
+      "name_zh": "晶豪科",
+      "group": "台股-記憶體"
+    },
+    {
+      "symbol": "3260",
+      "market": "tpex",
+      "name_zh": "威剛",
+      "group": "台股-記憶體"
+    },
+    {
+      "symbol": "3711",
+      "market": "twse",
+      "name_zh": "日月光投控",
+      "group": "台股-封測"
+    },
+    {
+      "symbol": "6239",
+      "market": "twse",
+      "name_zh": "力成",
+      "group": "台股-封測"
+    },
+    {
+      "symbol": "2449",
+      "market": "twse",
+      "name_zh": "京元電子",
+      "group": "台股-封測"
+    },
+    {
+      "symbol": "3037",
+      "market": "twse",
+      "name_zh": "欣興",
+      "group": "台股-PCB載板"
+    },
+    {
+      "symbol": "2383",
+      "market": "twse",
+      "name_zh": "台光電",
+      "group": "台股-PCB載板"
+    },
+    {
+      "symbol": "6213",
+      "market": "twse",
+      "name_zh": "聯茂",
+      "group": "台股-PCB載板"
+    },
+    {
+      "symbol": "2313",
+      "market": "twse",
+      "name_zh": "華通",
+      "group": "台股-PCB載板"
+    },
+    {
+      "symbol": "2367",
+      "market": "twse",
+      "name_zh": "燿華",
+      "group": "台股-PCB載板"
+    },
+    {
+      "symbol": "4958",
+      "market": "twse",
+      "name_zh": "臻鼎-KY",
+      "group": "台股-PCB載板"
+    },
+    {
+      "symbol": "2308",
+      "market": "twse",
+      "name_zh": "台達電",
+      "group": "台股-電源散熱"
+    },
+    {
+      "symbol": "3015",
+      "market": "twse",
+      "name_zh": "全漢",
+      "group": "台股-電源散熱"
+    },
+    {
+      "symbol": "3017",
+      "market": "twse",
+      "name_zh": "奇鋐",
+      "group": "台股-電源散熱"
+    },
+    {
+      "symbol": "3324",
+      "market": "tpex",
+      "name_zh": "雙鴻",
+      "group": "台股-電源散熱"
+    },
+    {
+      "symbol": "3653",
+      "market": "twse",
+      "name_zh": "健策",
+      "group": "台股-電源散熱"
+    },
+    {
+      "symbol": "3008",
+      "market": "twse",
+      "name_zh": "大立光",
+      "group": "台股-光學光通訊"
+    },
+    {
+      "symbol": "6209",
+      "market": "twse",
+      "name_zh": "今國光",
+      "group": "台股-光學光通訊",
+      "verify": true
+    },
+    {
+      "symbol": "3363",
+      "market": "tpex",
+      "name_zh": "上詮",
+      "group": "台股-光學光通訊"
+    },
+    {
+      "symbol": "3163",
+      "market": "tpex",
+      "name_zh": "波若威",
+      "group": "台股-光學光通訊"
+    },
+    {
+      "symbol": "5371",
+      "market": "tpex",
+      "name_zh": "中光電",
+      "group": "台股-光學光通訊"
+    },
+    {
+      "symbol": "2327",
+      "market": "twse",
+      "name_zh": "國巨",
+      "group": "台股-被動元件"
+    },
+    {
+      "symbol": "3026",
+      "market": "twse",
+      "name_zh": "禾伸堂",
+      "group": "台股-被動元件"
+    },
+    {
+      "symbol": "2492",
+      "market": "twse",
+      "name_zh": "華新科",
+      "group": "台股-被動元件"
+    },
+    {
+      "symbol": "2317",
+      "market": "twse",
+      "name_zh": "鴻海",
+      "group": "台股-品牌代工"
+    },
+    {
+      "symbol": "2382",
+      "market": "twse",
+      "name_zh": "廣達",
+      "group": "台股-品牌代工"
+    },
+    {
+      "symbol": "3231",
+      "market": "twse",
+      "name_zh": "緯創",
+      "group": "台股-品牌代工"
+    },
+    {
+      "symbol": "2376",
+      "market": "twse",
+      "name_zh": "技嘉",
+      "group": "台股-品牌代工"
+    },
+    {
+      "symbol": "2357",
+      "market": "twse",
+      "name_zh": "華碩",
+      "group": "台股-品牌代工"
+    },
+    {
+      "symbol": "2353",
+      "market": "twse",
+      "name_zh": "宏碁",
+      "group": "台股-品牌代工"
+    },
+    {
+      "symbol": "2474",
+      "market": "twse",
+      "name_zh": "可成",
+      "group": "台股-品牌代工"
+    },
+    {
+      "symbol": "2498",
+      "market": "twse",
+      "name_zh": "宏達電",
+      "group": "台股-品牌代工"
+    },
+    {
+      "symbol": "6285",
+      "market": "twse",
+      "name_zh": "啟碁",
+      "group": "台股-網通電信"
+    },
+    {
+      "symbol": "2419",
+      "market": "twse",
+      "name_zh": "仲琦",
+      "group": "台股-網通電信"
+    },
+    {
+      "symbol": "3694",
+      "market": "tpex",
+      "name_zh": "海華",
+      "group": "台股-網通電信",
+      "status": "unresolved"
+    },
+    {
+      "symbol": "2412",
+      "market": "twse",
+      "name_zh": "中華電",
+      "group": "台股-網通電信"
+    },
+    {
+      "symbol": "3031",
+      "market": "twse",
+      "name_zh": "佰鴻",
+      "group": "台股-無人機航太"
+    },
+    {
+      "symbol": "2634",
+      "market": "twse",
+      "name_zh": "漢翔",
+      "group": "台股-無人機航太"
+    },
+    {
+      "symbol": "5222",
+      "market": "tpex",
+      "name_zh": "全訊",
+      "group": "台股-無人機航太",
+      "verify": true,
+      "status": "unresolved"
+    },
+    {
+      "symbol": "3491",
+      "market": "tpex",
+      "name_zh": "昇達科",
+      "group": "台股-無人機航太"
+    },
+    {
+      "symbol": "2359",
+      "market": "twse",
+      "name_zh": "所羅門",
+      "group": "台股-機器人自動化"
+    },
+    {
+      "symbol": "2049",
+      "market": "twse",
+      "name_zh": "上銀",
+      "group": "台股-機器人自動化"
+    },
+    {
+      "symbol": "4585",
+      "market": "twse",
+      "name_zh": "達明",
+      "group": "台股-機器人自動化",
+      "verify": true
+    },
+    {
+      "symbol": "1503",
+      "market": "twse",
+      "name_zh": "士電",
+      "group": "台股-重電傳產"
+    },
+    {
+      "symbol": "1504",
+      "market": "twse",
+      "name_zh": "東元",
+      "group": "台股-重電傳產"
+    },
+    {
+      "symbol": "2371",
+      "market": "twse",
+      "name_zh": "大同",
+      "group": "台股-重電傳產"
+    },
+    {
+      "symbol": "1802",
+      "market": "twse",
+      "name_zh": "台玻",
+      "group": "台股-重電傳產"
+    },
+    {
+      "symbol": "2002",
+      "market": "twse",
+      "name_zh": "中鋼",
+      "group": "台股-重電傳產"
+    },
+    {
+      "symbol": "3481",
+      "market": "twse",
+      "name_zh": "群創",
+      "group": "台股-面板"
+    },
+    {
+      "symbol": "2409",
+      "market": "twse",
+      "name_zh": "友達",
+      "group": "台股-面板"
+    },
+    {
+      "symbol": "2609",
+      "market": "twse",
+      "name_zh": "陽明",
+      "group": "台股-航運"
+    },
+    {
+      "symbol": "2603",
+      "market": "twse",
+      "name_zh": "長榮",
+      "group": "台股-航運"
+    },
+    {
+      "symbol": "2882",
+      "market": "twse",
+      "name_zh": "國泰金",
+      "group": "台股-金融"
+    },
+    {
+      "symbol": "2892",
+      "market": "twse",
+      "name_zh": "第一金",
+      "group": "台股-金融"
+    },
+    {
+      "symbol": "2884",
+      "market": "twse",
+      "name_zh": "玉山金",
+      "group": "台股-金融"
+    },
+    {
+      "symbol": "1795",
+      "market": "twse",
+      "name_zh": "美時",
+      "group": "台股-生技營建其他"
+    },
+    {
+      "symbol": "6919",
+      "market": "tpex",
+      "name_zh": "康霈",
+      "group": "台股-生技營建其他",
+      "verify": true,
+      "status": "unresolved"
+    },
+    {
+      "symbol": "8422",
+      "market": "twse",
+      "name_zh": "可寧衛",
+      "group": "台股-生技營建其他"
+    },
+    {
+      "symbol": "5534",
+      "market": "twse",
+      "name_zh": "長虹",
+      "group": "台股-生技營建其他"
+    },
+    {
+      "symbol": "2542",
+      "market": "twse",
+      "name_zh": "興富發",
+      "group": "台股-生技營建其他"
+    },
+    {
+      "symbol": "8446",
+      "market": "tpex",
+      "name_zh": "華研",
+      "group": "台股-生技營建其他"
+    },
+    {
+      "symbol": "4577",
+      "market": "tpex",
+      "name_zh": "達航科技",
+      "group": "台股-生技營建其他"
+    },
+    {
+      "symbol": "0050",
+      "market": "twse",
+      "name_zh": "元大台灣50",
+      "group": "台股-ETF"
+    },
+    {
+      "symbol": "00940",
+      "market": "twse",
+      "name_zh": "元大台灣價值高息",
+      "group": "台股-ETF"
+    },
+    {
+      "symbol": "00980A",
+      "market": "twse",
+      "name_zh": "主動野村臺灣優選",
+      "group": "台股-ETF"
+    },
+    {
+      "symbol": "00982A",
+      "market": "twse",
+      "name_zh": "主動群益台灣強棒",
+      "group": "台股-ETF"
+    },
+    {
+      "symbol": "00997A",
+      "market": "twse",
+      "name_zh": "主動群益美國增長",
+      "group": "台股-ETF",
+      "verify": true
+    },
+    {
+      "symbol": "009821",
+      "market": "twse",
+      "name_zh": "野村稀土關鍵資源",
+      "group": "台股-ETF",
+      "verify": true
+    },
+    {
+      "symbol": "00687B",
+      "market": "tpex",
+      "name_zh": "國泰20年美債",
+      "group": "台股-ETF",
+      "note": "corrected market twse->tpex on 2026-07-12 validation run: confirmed listed on TPEx (上櫃) bulk quotes, not TWSE"
+    },
+    {
+      "symbol": "00910",
+      "market": "twse",
+      "name_zh": "第一金太空衛星",
+      "group": "台股-ETF"
+    }
+  ]
+}
