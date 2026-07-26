@@ -148,7 +148,6 @@ export function renderS2Plans(el, ctx) {
 
   el.innerHTML = `
     <div class="v2-card">
-      <a id="v2-s2"></a>
       <h3 class="v2-card-title">S2 交易計畫</h3>
       ${plansHtml}
       ${formHtml}

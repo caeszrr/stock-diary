@@ -123,6 +123,7 @@
 }
 .v2-step {
   display: flex; align-items: center; gap: var(--sp-1);
+  cursor: pointer; font-family: inherit;
   min-height: var(--tap);
   padding: 0 var(--sp-3);
   border-radius: var(--r-sm);

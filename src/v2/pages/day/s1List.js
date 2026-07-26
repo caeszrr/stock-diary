@@ -51,7 +51,6 @@ export function renderS1List(el, ctx) {
 
   el.innerHTML = `
     <div class="v2-card" id="v2-s1-card">
-      <a id="v2-s1"></a>
       <div class="v2-card-head">
         <h3 class="v2-card-title">S1 定案清單
           ${list.finalized ? '<span class="v2-chain-tag">已定案 🔒</span>' : ''}

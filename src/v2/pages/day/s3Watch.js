@@ -65,7 +65,6 @@ export function renderS3Watch(el, ctx) {
 
   el.innerHTML = `
     <div class="v2-card">
-      <a id="v2-s3"></a>
       <h3 class="v2-card-title">S3 盯盤</h3>
       ${alertBanner}
       ${cards}

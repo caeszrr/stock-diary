@@ -46,9 +46,11 @@ function stepStates(date) {
 
 function stepsHtml(date) {
   const { done, current } = stepStates(date);
+  // 注意:不能用 href="#…" 錨點 — 會改掉 #/v2 hash 而被接線判定為離開 v2。
   return `<nav class="v2-steps" aria-label="七步進度">${STEPS.map((s) => {
     const cls = done[s.n] ? 'v2-step-done' : (s.n === current ? 'v2-step-current' : '');
-    return `<a class="v2-step ${cls}" href="#v2-s${s.n}">S${s.n} ${s.label}</a>`;
+    const target = s.n === 5 ? 4 : s.n; // S5 是 S4 完成瞬間的彈窗,捲到 S4 卡
+    return `<button type="button" class="v2-step ${cls}" data-step-scroll="v2-s${target}">S${s.n} ${s.label}</button>`;
   }).join('')}</nav>`;
 }
 
@@ -85,6 +87,12 @@ export async function renderDayPage(el, date) {
       <section id="v2-s7"></section>
     </div>
   `;
+
+  for (const btn of el.querySelectorAll('[data-step-scroll]')) {
+    btn.addEventListener('click', () => {
+      document.getElementById(btn.dataset.stepScroll)?.scrollIntoView({ behavior: 'smooth' });
+    });
+  }
 
   const ctx = { date, readonly, quotes: {}, el };
 
