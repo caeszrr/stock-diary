@@ -3,8 +3,8 @@
 // deploy, so the shell is cached lazily as the app is used instead of via a
 // build-time manifest. Bump the cache name suffix to force-invalidate old
 // caches after a structural change to this file.
-const SHELL_CACHE = 'stock-diary-shell-v1';
-const DATA_CACHE = 'stock-diary-data-v1';
+const SHELL_CACHE = 'stock-diary-shell-v2';
+const DATA_CACHE = 'stock-diary-data-v2';
 const CURRENT_CACHES = new Set([SHELL_CACHE, DATA_CACHE]);
 
 self.addEventListener('install', () => {
@@ -26,6 +26,13 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+
+  // version.json drives the app's stale-copy detection — it must NEVER be served
+  // from cache, or a frozen copy could never notice a new deploy.
+  if (url.pathname.endsWith('version.json')) {
+    event.respondWith(fetch(request).catch(() => new Response('{}', { headers: { 'Content-Type': 'application/json' } })));
+    return;
+  }
 
   if (url.pathname.includes('/data/')) {
     event.respondWith(networkFirst(request));

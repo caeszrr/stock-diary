@@ -1,5 +1,31 @@
 import { fmtNum, fmtVolume, changePct, amplitudePct, changeColorClass, escapeHtml } from '../lib/format.js';
 import { getCellNote, setCellNote } from '../lib/userData.js';
+import { isTradingDay } from '../lib/marketCalendar.js';
+
+/**
+ * A blank cell used to mean three different things. Render them distinctly so the
+ * UI stops lying by omission: 休市 (calendar closed) / 資料補抓中 (expected, not yet
+ * arrived or being repaired) / 無成交・停牌 (source confirms no record) / unknown.
+ */
+function blankStateHtml(symbol, date, ctx) {
+  if (!ctx || !ctx.calMarket || !date) return '<div class="cell-empty"></div>';
+  if (!isTradingDay(ctx.calMarket, date)) {
+    return '<div class="cell-empty cell-holiday" title="休市（當日該市場未開盤）">休</div>';
+  }
+  const cov = ctx.coverage;
+  const resolved = cov?.resolved?.[symbol];
+  if (resolved === 'no_trade' || resolved === 'suspended' || resolved === 'market_closed') {
+    return '<div class="cell-empty cell-notrade" title="無成交・停牌（來源確認當日無此檔交易）">無</div>';
+  }
+  const latest = cov?.sessionDate;
+  if (latest && date > latest) {
+    return '<div class="cell-empty cell-pending" title="資料補抓中（尚未到，系統重試中）">⋯</div>';
+  }
+  if (latest && date === latest && cov?.missingCodes?.includes(symbol)) {
+    return '<div class="cell-empty cell-pending" title="資料補抓中（系統重試中）">⋯</div>';
+  }
+  return '<div class="cell-empty" title="無資料"></div>';
+}
 
 function emphasisClass(note) {
   if (!note) return '';
@@ -77,12 +103,16 @@ function noteEditorHtml(symbol, date, note) {
 }
 
 /** Builds a <td> for one symbol/date cell, wired to the notes store when symbol+date are given. */
-export function renderCell(rec, { symbol, date } = {}) {
+export function renderCell(rec, { symbol, date, stateCtx } = {}) {
   const td = document.createElement('td');
   td.className = 'cell';
+  if (!rec || rec.c === undefined) {
+    td.innerHTML = blankStateHtml(symbol, date, stateCtx);
+    return td;
+  }
   const note = symbol && date ? getCellNote(symbol, date) : null;
   td.innerHTML = compactHtml(rec, note);
-  if (!rec || rec.c === undefined || !symbol || !date) return td;
+  if (!symbol || !date) return td;
 
   td.tabIndex = 0;
   const toggle = () => toggleCell(td, rec, symbol, date);

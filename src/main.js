@@ -9,6 +9,9 @@ if ('serviceWorker' in navigator) {
 }
 
 import { loadManifest, loadStatus, loadMonth } from './lib/loadMonth.js';
+import { isTradingDay } from './lib/marketCalendar.js';
+import { startUpdateWatch, forceRefresh } from './lib/appUpdate.js';
+import { buildSystemStatusHtml } from './components/systemStatus.js';
 import { renderTabs } from './components/yearMonthTabs.js';
 import { renderMatrix } from './components/matrix.js';
 import { renderSettings } from './components/settingsPanel.js';
@@ -29,6 +32,7 @@ app.innerHTML = `
     <header class="app-header">
       <h1>股票日記</h1>
       <div class="status-line" id="status-line"></div>
+      <button type="button" id="refresh-data" class="refresh-btn" title="重新抓取最新資料並更新到最新版本">🔄 重新整理資料</button>
       <button type="button" id="roc-toggle" class="roc-toggle">切換民國/西元</button>
       <div id="add-stock-slot"></div>
       <div id="settings-slot"></div>
@@ -63,16 +67,64 @@ function loadMonthCached(year, month) {
   return monthCache.get(key);
 }
 
+function mdLabel(iso) {
+  if (!iso) return '—';
+  const [, m, d] = iso.split('-');
+  return `${Number(m)}/${Number(d)}`;
+}
+
+/** Today's date in Asia/Taipei (this is a Taiwan-market app — dates are Taipei, not UTC/local). */
+function taipeiTodayIso() {
+  const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
+  const m = Object.fromEntries(parts.map((p) => [p.type, p.value]));
+  return `${m.year}-${m.month}-${m.day}`;
+}
+
+/** Coverage stamp: "上市 7/24 · 67/67" per market, colored by completeness so a partial session is visible at a glance. */
 function renderStatusLine() {
+  const cov = state.status.coverage || {};
+  const markets = [
+    { key: 'tw', label: '上市' },
+    { key: 'tpex', label: '上櫃' },
+    { key: 'us', label: '美股' },
+  ];
   const parts = [];
-  const labels = { tw: 'TW上市', tpex: 'TW上櫃', us: '美股' };
-  for (const [market, label] of Object.entries(labels)) {
-    const s = state.status[market];
-    if (!s) continue;
-    const stamp = s.latestSessionDate || '—';
-    parts.push(`${label} 最後更新：${stamp}`);
+  for (const { key, label } of markets) {
+    const c = cov[key];
+    const s = state.status[key];
+    if (!c && !s) continue;
+    const date = c?.sessionDate || s?.latestSessionDate;
+    if (c) {
+      const cls = c.health === 'gap' ? 'stamp-alert' : (c.complete ? 'stamp-ok' : 'stamp-warn');
+      const title = c.health === 'gap'
+        ? `缺漏：${(c.missingCodes || []).join('、') || '—'}`
+        : (c.complete ? '完整' : '補抓中');
+      parts.push(`<span class="stamp ${cls}" title="${title}">${label} ${mdLabel(date)} <b>${c.actualCount}/${c.expectedCount}</b></span>`);
+    } else {
+      parts.push(`<span class="stamp">${label} ${mdLabel(date)}</span>`);
+    }
   }
-  statusLine.textContent = parts.join('　|　') || '尚無資料';
+  statusLine.innerHTML = parts.join('') || '尚無資料';
+}
+
+/** One-line freshness banner: latest / holiday / delayed / anomaly, in zh-TW. */
+function freshnessBannerHtml() {
+  const cov = state.status.coverage || {};
+  const markets = ['tw', 'tpex', 'us'];
+  const present = markets.filter((m) => cov[m]);
+  if (!present.length) return '';
+  const anyGap = present.some((m) => cov[m].health === 'gap');
+  const anyIncomplete = present.some((m) => !cov[m].complete && cov[m].health !== 'gap');
+  if (anyGap) return `<div class="freshness-banner banner-alert">⚠ 資料異常，已通知維護者</div>`;
+  if (anyIncomplete) return `<div class="freshness-banner banner-warn">⏳ 資料延遲中，系統正在重試</div>`;
+
+  const today = taipeiTodayIso();
+  const tradingSomewhere = isTradingDay('tw', today) || isTradingDay('us', today);
+  if (!tradingSomewhere) {
+    const latest = cov.tw?.sessionDate || cov.us?.sessionDate;
+    return `<div class="freshness-banner banner-holiday">今日休市（正常，最新資料為 ${mdLabel(latest)}）</div>`;
+  }
+  return `<div class="freshness-banner banner-ok">✓ 資料為最新</div>`;
 }
 
 /** Loads whichever extra months are needed to have data for every pinned date not in the current month. */
@@ -152,7 +204,7 @@ async function renderTabsAndMatrix() {
     pinnedDataMap[symbol] = { ...(pinnedDataMap[symbol] || {}), ...byDate };
   }
 
-  bannerSlot.innerHTML = renderBlankModeBanner(groups);
+  bannerSlot.innerHTML = freshnessBannerHtml() + renderBlankModeBanner(groups);
 
   renderMatrix(matrixWrapper, {
     dataMap,
@@ -162,6 +214,7 @@ async function renderTabsAndMatrix() {
     collapsedGroups: state.collapsedGroups,
     pinnedIndexTickers: pinnedIndices(),
     groupedTickers: groups,
+    coverage: state.status.coverage || {},
     onToggleGroup: (group) => {
       if (state.collapsedGroups.has(group)) state.collapsedGroups.delete(group);
       else state.collapsedGroups.add(group);
@@ -194,7 +247,14 @@ renderSettings(settingsSlot, {
     renderTabsAndMatrix();
   },
   onUnhideTicker: () => renderTabsAndMatrix(),
+  extraSections: [{ title: '系統狀態', html: '<div id="system-status-body"></div>' }],
+  onOpen: () => {
+    const el = document.getElementById('system-status-body');
+    if (el) el.innerHTML = buildSystemStatusHtml(state.status);
+  },
 });
+
+document.querySelector('#refresh-data').addEventListener('click', () => forceRefresh());
 
 renderAddStockDialog(addStockSlot, {
   onAdded: () => renderTabsAndMatrix(),
@@ -225,6 +285,9 @@ async function init() {
   } else {
     await renderTabsAndMatrix();
   }
+
+  // Guard against a stale service-worker copy: reload if a newer build deployed.
+  startUpdateWatch();
 }
 
 init();
