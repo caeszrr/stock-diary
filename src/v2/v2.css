@@ -71,7 +71,11 @@
   padding: var(--sp-4);
   margin-bottom: var(--sp-4);
 }
-.v2-card-title { font-size: var(--fs-lg); margin: 0 0 var(--sp-3); display: flex; align-items: center; gap: var(--sp-2); }
+.v2-card-title {
+  font-size: var(--fs-lg); margin: 0 0 var(--sp-3);
+  display: flex; align-items: center; gap: var(--sp-2);
+  flex-wrap: wrap; min-width: 0; overflow-wrap: anywhere; /* 超長股名不撐爆卡片 */
+}
 .v2-card-head { display: flex; align-items: center; justify-content: space-between; gap: var(--sp-3); }
 .v2-num-key { font-size: var(--fs-num); font-variant-numeric: tabular-nums; font-weight: 700; margin: var(--sp-2) 0; }
 .v2-num-lg { font-size: var(--fs-num-lg); font-variant-numeric: tabular-nums; font-weight: 700; }

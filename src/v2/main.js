@@ -29,7 +29,7 @@ function mdLabel(iso) {
 function statusHtml(status) {
   const cov = status?.coverage || {};
   const tw = cov.tw;
-  let pipeline = '資料:載入中…';
+  let pipeline = status === null ? '資料:載入中…' : '資料狀態:暫時無法取得';
   if (tw) {
     pipeline = `資料:${mdLabel(tw.sessionDate)} 收盤${tw.complete ? '(完整)' : '(補抓中)'}`;
   } else if (status?.tw?.latestSessionDate) {

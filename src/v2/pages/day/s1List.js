@@ -15,9 +15,9 @@ function pctClass(pct) {
   return pct > 0 ? 'v2-up' : (pct < 0 ? 'v2-down' : 'v2-flat');
 }
 
-function quoteCardHtml(t, q) {
+function quoteCardHtml(t, q, loading) {
   if (!q) {
-    return `<div class="v2-hint">最近收盤:尚無資料</div>`;
+    return `<div class="v2-hint">${loading ? '報價載入中…' : '最近收盤:尚無資料(缺就留白,不捏造)'}</div>`;
   }
   const pct = changePct(q.c, q.pc);
   const cls = pctClass(pct);
@@ -42,7 +42,7 @@ export function renderS1List(el, ctx) {
             ${list.finalized || readonly ? '' : `
               <button type="button" class="v2-btn v2-btn-more" data-menu="${escapeHtml(t.code)}" title="更多動作">⋯</button>`}
           </div>
-          ${quoteCardHtml(t, quotes[t.code])}
+          ${quoteCardHtml(t, quotes[t.code], ctx.quotesLoading)}
           <div class="v2-hint hidden" data-menu-body="${escapeHtml(t.code)}">
             <button type="button" class="v2-btn v2-btn-danger" data-remove="${escapeHtml(t.code)}">自清單移除</button>
           </div>

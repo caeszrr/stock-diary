@@ -94,17 +94,18 @@ export async function renderDayPage(el, date) {
     });
   }
 
-  const ctx = { date, readonly, quotes: {}, el };
-
-  // 同步先畫(報價欄位顯示載入中),報價回來後重畫相關步驟
-  drawSections(ctx);
-
   const symbols = [...new Set([
     ...getDayList(date).symbols.map((t) => t.code),
     ...plansForDate(date).map((p) => p.symbol),
   ])];
+  const ctx = { date, readonly, quotes: {}, quotesLoading: symbols.length > 0, el };
+
+  // 同步先畫(報價欄位顯示載入中),報價回來後重畫相關步驟
+  drawSections(ctx);
+
   if (symbols.length) {
     ctx.quotes = await latestQuotes(symbols, date);
+    ctx.quotesLoading = false;
     if (el.querySelector('#v2-day-sections')) drawSections(ctx);
   }
 }

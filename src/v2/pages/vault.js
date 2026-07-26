@@ -84,6 +84,13 @@ export function renderVaultPage(el) {
     if (info && !nameInput.value) nameInput.value = info.name || '';
   });
 
+  // 鍵盤體驗:數字欄按 Enter = 加入金庫
+  for (const id of ['#v2-vault-qty', '#v2-vault-price']) {
+    el.querySelector(id).addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') el.querySelector('#v2-vault-add').click();
+    });
+  }
+
   el.querySelector('#v2-vault-add').addEventListener('click', () => {
     const msg = el.querySelector('#v2-vault-msg');
     const code = codeInput.value.trim().toUpperCase();

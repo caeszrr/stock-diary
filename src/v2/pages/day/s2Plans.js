@@ -177,7 +177,12 @@ export function renderS2Plans(el, ctx) {
     createBtn.disabled = !valid;
   };
   for (const id of ['symbol', 'direction', 'daytrade', 'entry', 'stop', 'target', 'qty']) {
-    el.querySelector(`#v2-s2-${id}`)?.addEventListener('input', update);
+    const input = el.querySelector(`#v2-s2-${id}`);
+    input?.addEventListener('input', update);
+    // 鍵盤體驗:任一欄按 Enter = 建立計畫(硬閘沒過時無效)
+    input?.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !createBtn.disabled) createBtn.click();
+    });
   }
   update();
 

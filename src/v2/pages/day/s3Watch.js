@@ -18,7 +18,7 @@ function distBarHtml(ev, thresholdPct) {
     </div>`;
 }
 
-function watchCardHtml(p, ev, readonly) {
+function watchCardHtml(p, ev, readonly, loading) {
   const statusTag = ev
     ? (ev.touched
       ? '<span class="v2-chain-tag" style="border-color:var(--up); color:var(--up);">🔔 已觸價</span>'
@@ -37,7 +37,7 @@ function watchCardHtml(p, ev, readonly) {
           <span style="font-size: var(--fs-base); color: var(--text-dim);">(最近收盤 ${fmtNum(ev.price)}・${ev.priceDate},進場 ${fmtNum(p.entry)})</span>
         </div>
         ${distBarHtml(ev, p.thresholdPct)}`
-    : '<p class="v2-hint">最近收盤:尚無資料 — 無法計算距離(絕不以捏造值代替)。</p>'}
+    : `<p class="v2-hint">${loading ? '報價載入中…' : '最近收盤:尚無資料 — 無法計算距離(絕不以捏造值代替)。'}</p>`}
       <div class="v2-field-row" style="align-items:center;">
         <label class="v2-field" style="flex:0 0 160px;">
           <span>接近門檻(%)</span>
@@ -60,7 +60,7 @@ export function renderS3Watch(el, ctx) {
     : '';
 
   const cards = plans.length
-    ? plans.map((p) => watchCardHtml(p, evaluatePlan(p, quotes[p.symbol]), readonly)).join('')
+    ? plans.map((p) => watchCardHtml(p, evaluatePlan(p, quotes[p.symbol]), readonly, ctx.quotesLoading)).join('')
     : '<p class="v2-empty">沒有等待中的計畫 — 在 S2 建立計畫後,這裡會顯示每筆的距離條與警示。</p>';
 
   el.innerHTML = `
