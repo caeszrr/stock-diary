@@ -9,3 +9,10 @@
 - 03:10 本檔建立。
 
 === SAFETY SNAPSHOT COMPLETE ===
+
+## 里程碑
+- 03:15 勘查:repo 無 feeCalculator/Fugle/Telegram/SQLite/vitest → 決定 D1–D10(見 DECISIONS.md)。
+- 03:18 **M1** commit `b1d04eb`:v2 殼(tokens/路由/側欄/topbar/dryRun 草稿層)+ `src/main.js` 最小接線。build ✓。
+- 03:22 **M2** commit `6869628`:交易日骨架 — 日期列/七步進度/過去日唯讀 + 步驟殼。build ✓。
+- 03:26 Playwright 驗證(桌機 1400×900 + 手機 390×844 + 過去日 + v1 迴歸):零 console/pageerror;S1 互動流程(加入 2330/錯誤代號/定案/解鎖)全通。
+- 03:27 **M3** commit `50358f3`:S1 定案清單完成(含漲跌幅捨入與時間戳修正)。build ✓。
