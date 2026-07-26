@@ -35,3 +35,12 @@ localStorage 存取僅 `v2store.js` ✓;表格皆在 `overflow-x:auto` 容器內
 判定合規、保留並記錄:S1 卡「加入」為輸入列配套鈕,唯一 primary 是「定案」;
 金庫清單每列「移除」是表格列動作(表格不適用卡片解剖律)。
 複驗:build ✓、vitest 10/10 ✓、全頁 Playwright 掃描(桌機+手機+過去日+v1 迴歸)零 console/pageerror ✓ → **違規歸零**。
+
+- 03:40 **M10** commit `7544210`。
+- 03:42 **M11** commit `3ef814f`:打磨(載入/錯誤狀態、Enter 鍵盤、超長股名)。
+- 03:45 **M12**:證明收齊 — build ✓、10/10 測試 ✓、純度 grep 0 筆 ✓、
+  `git diff -w` 證實 src/main.js 實際僅 +13 行、diff 範圍僅文件/備份/依賴/接線。
+  MORNING_REPORT.md 與 PLAIN_LOG.md 已交付。
+
+結束時間:2026-07-27 03:45 左右。M1–M12 全數達成(M6+M7 同 commit;
+Telegram/Fugle 為 BLOCKED 誠實列於晨報第二節)。
