@@ -5,9 +5,10 @@ on:
     # 22:30 UTC = 06:30 Taipei, after the US close (04:00-05:00 Taipei across
     # both DST states). Tue-Sat UTC covers Mon-Fri US trading days.
     - cron: '30 22 * * 2-6'
-    # Retry: 23:30 UTC. Same idempotent-retry reasoning as fetch-tw.yml — a
-    # repeat fetch that finds nothing new produces an empty diff, so the
-    # commit/deploy steps are skipped and this run is a no-op.
+    # Retry: 23:30 UTC. fetch:us now self-heals (targeted re-fetch of any symbol
+    # missing the source-consensus latest session) and writes a completeness
+    # verdict to data/status.json's `coverage`. An INCOMPLETE run exits non-zero
+    # so this retry cron meaningfully re-attempts, per fetch-tw.yml.
     - cron: '30 23 * * 2-6'
   workflow_dispatch: {}
 
@@ -36,7 +37,11 @@ jobs:
 
       - run: npm ci
 
+      # continue-on-error so an incomplete session still commits partial data +
+      # the coverage record below; the run is failed at the end for visibility.
       - name: Fetch US stocks + indices
+        id: fetch-us
+        continue-on-error: true
         run: npm run fetch:us
 
       - name: Check for changes
@@ -75,3 +80,9 @@ jobs:
         if: steps.git-check.outputs.changed == 'true'
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Fail run if the session was incomplete
+        if: steps.fetch-us.outcome == 'failure'
+        run: |
+          echo "::warning::The US session was incomplete or failed — see data/status.json coverage + the fetch step logs. The retry cron will re-attempt; the watchdog will escalate if it persists."
+          exit 1
