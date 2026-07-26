@@ -1,7 +1,7 @@
 {
   "tw": {
-    "lastRun": "2026-07-24T13:07:29.813Z",
-    "latestSessionDate": "2026-07-23",
+    "lastRun": "2026-07-26T14:43:23.131Z",
+    "latestSessionDate": "2026-07-24",
     "watchlistCount": 67,
     "fullMarketCount": 1371,
     "ok": true
@@ -22,14 +22,12 @@
     "ok": true
   },
   "backfill": {
-    "lastRun": "2026-07-20T20:19:09.596Z",
+    "lastRun": "2026-07-26T14:43:23.132Z",
+    "note": "targeted gap repair: 上市×67 + TAIEX for 2026-07-24 (stale STOCK_DAY_ALL snapshot) and all US stocks+indices for 2026-07-13 (missed session)",
     "range": {
-      "start": "2026-07-20",
-      "end": "2026-07-21"
+      "start": "2026-07-01",
+      "end": "2026-07-24"
     },
-    "twseRecordCount": 871,
-    "taiexRecordCount": 1,
-    "usRecordCount": 20,
     "tpexSkipped": [
       "5347",
       "3707",
