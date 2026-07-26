@@ -5,7 +5,10 @@ Static PWA that replaces a hand-typed Word-table daily stock diary. See
 against. **All 7 planned phases are complete** (Phase 8 intentionally
 skipped, see below): data pipeline, read-only matrix UI, the annotation
 layer, add-stock + start modes, GitHub Actions + Pages deploy, PWA + mobile
-polish, and this docs/handoff pass.
+polish, and this docs/handoff pass. A later hardening pass added **completeness
+monitoring**: the pipeline verifies every session is complete (not merely
+present), self-heals gaps, and a watchdog escalates only what it can't fix —
+see "Self-monitoring: coverage records + watchdog" below.
 
 **Live site**: https://caeszrr.github.io/stock-diary/
 **Repo**: https://github.com/caeszrr/stock-diary
@@ -168,6 +171,45 @@ tab → click the red ✗ run → expand the failing step.
 | A whole workflow run is red (failed) | Node/npm error, not a data-source issue | Open the failing step's log directly — usually a stack trace pointing at the exact line |
 | One symbol just stopped appearing | Delisted, or code changed | Re-run `npm run validate` (locally or by checking its report format) — it marks unresolved symbols `"status": "unresolved"` without deleting them, exactly like the 3 tickers noted in "Unresolved tickers" above |
 | Retry run (08:10/23:30 UTC) always seems to do nothing | This is expected when the 07:10/22:30 run already succeeded — see "Phase 5" below for why the retry is a deliberate no-op in that case, not a sign anything is broken |
+
+## Self-monitoring: coverage records + watchdog
+
+The pipeline checks **completeness, not presence** — a stale/partial session
+is detected instead of being silently accepted (this was added after a
+2026-07-24 partial-update slipped through green). Key pieces:
+
+- **Coverage record** — `data/status.json` has a `coverage` block per market:
+  `sessionDate`, `expectedCount`, `actualCount`, `missingCodes`, `complete`,
+  `stale`, a `health` verdict (`healthy`/`gap`/`resolved-empty`), any resolved
+  per-symbol verdicts (`no_trade`/`suspended`/`market_closed`/`no_history`),
+  and `anomalies`. Read it on the live site at
+  `https://caeszrr.github.io/stock-diary/data/status.json`. The app surfaces it
+  as the header coverage stamp (e.g. `上市 7/24 67/67`) and the 設定 → **系統狀態**
+  panel.
+- **Expectation is derived at runtime** (`scripts/lib/coverage.js`): configured
+  watchlist ∪ previous-session symbols, against the calendar in
+  `config/market-holidays.json` (TWSE official schedule + rule-computed NYSE
+  holidays + `twDiscovered` ad-hoc closures like typhoon days). Refresh it with
+  `npm run fetch:holidays` (the **Refresh market holiday calendar** workflow
+  does this yearly/monthly).
+- **Fetch self-heals**: after fetching, each `fetch:*` re-requests only the
+  missing symbols with backoff, and exits non-zero if still incomplete so the
+  retry cron re-fires on an *incomplete* (not just absent) session. Partial
+  data is committed with `complete:false`, never marked complete.
+- **Watchdog** (`.github/workflows/watchdog.yml`, `npm run watchdog` /
+  `watchdog:sweep`): escalating passes after each market window + a daily
+  14-session sweep. Its first action is cheap — read coverage and exit in
+  seconds if complete (zero network on a healthy or non-trading day). On a gap
+  it re-fetches only the missing symbols, reaches a verdict (a confirmed
+  no-trade is not a failure), and writes the health verdict back.
+- **A watchdog GitHub Issue** (titled `資料異常：<市場> <交易日>`) means an
+  *unresolved* gap survived automatic repair — GitHub emails you on creation.
+  It lists the still-missing codes and what was tried. The watchdog updates the
+  same issue rather than duplicating it.
+- **Manually force a repair**: Actions → **Data watchdog** → Run workflow
+  (tick *sweep* to re-check the last 14 sessions), or for a specific
+  symbol/date use **Backfill historical data** with `symbols` set. Locally:
+  `npm run watchdog:sweep`, or `BACKFILL_SYMBOLS=2330 npm run backfill`.
 
 ## Future work (Phase 8 — skipped)
 
