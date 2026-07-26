@@ -13,6 +13,36 @@ see "Self-monitoring: coverage records + watchdog" below.
 **Live site**: https://caeszrr.github.io/stock-diary/
 **Repo**: https://github.com/caeszrr/stock-diary
 
+## V2 trading-day workflow (overnight build, 2026-07-27 — dryRun 驗收中)
+
+An experimental **v2 app** lives entirely in `src/v2/`: a seven-step
+trading-day pipeline (定案清單 → 交易計畫 → 盯盤 → 成交確認 → 連環下一筆 →
+收盤儀式 → 結算) plus a manual-entry 金庫 (holdings vault). Reached via the
+「✨ V2 新版」 header button or `#/v2`; the app still defaults to v1.
+
+Key architecture decisions (full rationale in `DECISIONS.md`, design rules in
+`src/v2/DESIGN.md`, build log in `OVERNIGHT_LOG.md`, acceptance guide in
+`MORNING_REPORT.md`):
+
+- **Why a hash-gated second app instead of a router refactor**: v1 stays
+  byte-for-byte identical in behavior; the only existing file touched is
+  `src/main.js` (+13 effective lines) which mounts `src/v2/main.js` when the
+  hash starts with `#/v2`. Rollback surface is those 13 lines.
+- **dryRun draft layer**: v2 writes go through `src/v2/lib/draftStore.js`;
+  while `DRY_RUN = true` (`src/v2/lib/dryRun.js`) everything stays in memory
+  with a full append-only payload log. Real persistence targets a *separate*
+  localStorage key (`stockDiaryV2`, via `src/v2/lib/v2store.js`) — never v1's
+  user data, keeping the "userData.js is the only localStorage writer" rule
+  intact per store.
+- **Fees are code + tests, not UI math**: `src/v2/lib/fees.js` (0.1353% both
+  sides, 0.15%/0.3% sell tax, buy tax 0, floor rounding, no assumed NT$20
+  minimum) locked by 10 vitest tests (`npm test`). Risk/reward < 1.5 is a
+  hard gate in S2.
+- **No realtime source is honestly no realtime**: all "current" prices are
+  labeled 最近收盤 from the existing EOD pipeline (`public/data/`); Fugle/
+  Telegram are declared not-connected stubs (`src/v2/lib/alerts.js`) rather
+  than fabricated.
+
 ## Architecture decisions made while building
 
 - **Tooling**: Vite + vanilla JS, no framework, no TypeScript. Build output is
