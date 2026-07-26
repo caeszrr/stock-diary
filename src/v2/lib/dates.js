@@ -36,6 +36,13 @@ export function settlementDateIso(tradeIso) {
   return d;
 }
 
+/** ISO 時間戳 → 台北當地 HH:MM(草稿紀錄顯示用)。 */
+export function localTimeLabel(ts) {
+  return new Intl.DateTimeFormat('zh-TW', {
+    timeZone: 'Asia/Taipei', hour: '2-digit', minute: '2-digit', hour12: false,
+  }).format(new Date(ts));
+}
+
 /** 民國顯示,例:2026-07-27 → 民國115年7月27日(週一) */
 export function fullDateLabel(iso, { roc = false } = {}) {
   const [y, m, d] = iso.split('-').map(Number);

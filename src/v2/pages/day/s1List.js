@@ -6,6 +6,7 @@ import {
   getDayList, addSymbolToList, removeSymbolFromList, finalizeList, unlockList,
 } from '../../lib/draftStore.js';
 import { getTwSymbolInfo } from '../../lib/quotes.js';
+import { localTimeLabel } from '../../lib/dates.js';
 import { fmtNum, changePct, escapeHtml } from '../../../lib/format.js';
 import { aiSlotHtml } from '../../components/aiSlot.js';
 
@@ -19,11 +20,11 @@ function quoteCardHtml(t, q) {
     return `<div class="v2-hint">最近收盤:尚無資料</div>`;
   }
   const pct = changePct(q.c, q.pc);
-  const cls = pctClass(pct === undefined ? undefined : Number(pct));
-  const sign = pct !== undefined && Number(pct) > 0 ? '+' : '';
+  const cls = pctClass(pct);
+  const sign = pct !== undefined && pct > 0 ? '+' : '';
   return `
     <div class="v2-num-key ${cls}">${fmtNum(q.c)}
-      <span style="font-size: var(--fs-base);">${pct !== undefined ? `${sign}${pct}%` : ''}</span>
+      <span style="font-size: var(--fs-base);">${pct !== undefined ? `${sign}${pct.toFixed(2)}%` : ''}</span>
     </div>
     <div class="v2-hint">最近收盤(${q.date})</div>`;
 }
@@ -56,7 +57,7 @@ export function renderS1List(el, ctx) {
           ${list.finalized ? '<span class="v2-chain-tag">已定案 🔒</span>' : ''}
         </h3>
       </div>
-      ${list.unlockLog.length ? `<p class="v2-hint">解鎖紀錄:${list.unlockLog.map((u) => `${u.ts.slice(11, 16)}「${escapeHtml(u.reason)}」`).join(';')}</p>` : ''}
+      ${list.unlockLog.length ? `<p class="v2-hint">解鎖紀錄:${list.unlockLog.map((u) => `${localTimeLabel(u.ts)}「${escapeHtml(u.reason)}」`).join(';')}</p>` : ''}
       ${itemsHtml}
       ${readonly ? '' : (list.finalized ? `
         <div class="v2-field-row">

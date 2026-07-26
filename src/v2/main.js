@@ -29,9 +29,12 @@ function mdLabel(iso) {
 function statusHtml(status) {
   const cov = status?.coverage || {};
   const tw = cov.tw;
-  const pipeline = tw
-    ? `資料:${mdLabel(tw.sessionDate)} 收盤${tw.complete ? '(完整)' : '(補抓中)'}`
-    : '資料:載入中…';
+  let pipeline = '資料:載入中…';
+  if (tw) {
+    pipeline = `資料:${mdLabel(tw.sessionDate)} 收盤${tw.complete ? '(完整)' : '(補抓中)'}`;
+  } else if (status?.tw?.latestSessionDate) {
+    pipeline = `資料:${mdLabel(status.tw.latestSessionDate)} 收盤`;
+  }
   return `
     <span class="v2-status-item v2-status-off" title="Fugle 即時報價尚未接通;所有價格為最近收盤">● Fugle 即時:未接通</span>
     <span class="v2-status-item" title="EOD 報價管線(public/data)">${pipeline}</span>
