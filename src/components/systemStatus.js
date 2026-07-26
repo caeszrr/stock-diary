@@ -40,6 +40,12 @@ export function buildSystemStatusHtml(status = {}) {
     const date = c?.sessionDate || s.latestSessionDate;
     const coverageText = c ? `${c.actualCount}/${c.expectedCount} 檔` : '—';
     const gaps = c?.missingCodes?.length ? `<div class="sys-gaps">缺漏：${escapeHtml(c.missingCodes.join('、'))}</div>` : '';
+    const a = c?.anomalies;
+    const anomalyBits = [];
+    if (a?.lowVolume?.length) anomalyBits.push(`量能異常：${escapeHtml(a.lowVolume.join('、'))}`);
+    if (a?.repeatedSnapshot?.length) anomalyBits.push('疑似重複快照');
+    if (a?.drift) anomalyBits.push('台美最新交易日落差過大');
+    const anomalies = anomalyBits.length ? `<div class="sys-gaps">⚠ ${anomalyBits.join('；')}</div>` : '';
     return `
       <div class="sys-row">
         <div class="sys-market">${label}</div>
@@ -49,6 +55,7 @@ export function buildSystemStatusHtml(status = {}) {
           <div><span class="sys-k">狀態</span> ${verdictLabel(c)}</div>
           <div><span class="sys-k">最後抓取</span> ${fmtTime(s.lastRun)}</div>
           ${gaps}
+          ${anomalies}
         </div>
       </div>`;
   }).join('');

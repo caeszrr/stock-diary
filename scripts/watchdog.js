@@ -23,13 +23,15 @@ import { fetchDaily } from './lib/yahoo.js';
 import { upsertRecords, readMonthFile, readJson, regenerateManifest } from './lib/jsonStore.js';
 import { loadTickers, isFetchable } from './lib/tickers.js';
 import { computeYearHighLow } from './lib/yearHighLow.js';
-import { isoYear, isoMonth, sleep } from './lib/dates.js';
+import { isoYear, isoMonth, sleep, todayTaipei } from './lib/dates.js';
 import {
   loadHolidays,
   recentTradingSessions,
+  previousTradingDate,
   buildCoverage,
   writeCoverage,
 } from './lib/coverage.js';
+import { scanSanity, crossMarketDrift } from './lib/sanity.js';
 
 const SWEEP = process.env.WATCHDOG_SWEEP === '1' || process.argv.includes('--sweep');
 const LOOKBACK = SWEEP ? 14 : 1;
@@ -91,9 +93,18 @@ async function main() {
   const report = { mode: SWEEP ? 'sweep' : 'latest', lookback: LOOKBACK, markets: {}, unresolved: [], healed: [], discoveredClosures: [] };
   let networkCalls = 0;
 
+  const statusNow = readJson('status.json', {});
   for (const [market, g] of Object.entries(GROUPS)) {
     if (!g.symbols.length) continue;
-    const sessions = recentTradingSessions(g.calendar, LOOKBACK, { holidays });
+    // Only judge sessions that should already be PUBLISHED: strictly before the
+    // market's current day, OR the exact session the last fetch already recorded.
+    // This prevents falsely declaring today's not-yet-fetched session a gap or a
+    // "market closure" before its data has had any chance to arrive.
+    const marketToday = g.calendar === 'us' ? new Date().toISOString().slice(0, 10) : todayTaipei();
+    const covSession = statusNow.coverage?.[market]?.sessionDate;
+    const sessions = recentTradingSessions(g.calendar, LOOKBACK + 2, { holidays })
+      .filter((s) => s < marketToday || s === covSession)
+      .slice(-LOOKBACK);
     const marketReport = { label: g.label, sessions: {} };
 
     for (const session of sessions) {
@@ -185,6 +196,43 @@ async function main() {
     if (cov && cov.complete && !cov.health) {
       cov.health = 'healthy';
       writeCoverage(market, cov);
+    }
+  }
+
+  // ---- Phase F: sanity checks beyond presence (data can exist and still be wrong) ----
+  const covNow = readJson('status.json', {}).coverage || {};
+  const drift = crossMarketDrift(covNow.tw?.sessionDate, covNow.us?.sessionDate);
+  if (drift) report.anomalies = [...(report.anomalies || []), { type: 'cross_market_drift', ...drift }];
+  for (const [market, g] of Object.entries(GROUPS)) {
+    if (!g.symbols.length || !g.fetchMonth) continue; // tpex can't be re-verified per-symbol
+    const session = covNow[market]?.sessionDate;
+    if (!session) continue;
+    const prev = previousTradingDate(session, g.calendar, holidays);
+    const scan = scanSanity(g.store, g.symbols, session, prev);
+    const suspects = [...new Set([...scan.lowVolume, ...scan.repeatedSnapshot])];
+    // Re-verify suspects against the source (mid-session captures resolve to the
+    // official close once re-fetched after close); heal only if the value changed.
+    for (const s of suspects) {
+      try {
+        const rows = await g.fetchMonth(s, isoYear(session), isoMonth(session));
+        networkCalls += 1;
+        const rec = rows.find((r) => r.date === session && r.c !== undefined);
+        const cur = presentForSession(new Map(), g.store, session, [s]).length
+          ? readMonthFile(g.store, isoYear(session), isoMonth(session))[s][session]
+          : null;
+        if (rec && cur && (cur.v !== rec.v || cur.c !== rec.c)) {
+          upsertRecords(g.store, [rec], { pretty: false });
+          report.healed.push({ market, session, symbols: [s], reason: 'sanity-reverify' });
+        }
+      } catch (err) {
+        console.error(`[watchdog] sanity re-verify ${market} ${s} FAILED: ${err.message}`);
+      }
+      await sleep(300);
+    }
+    if (scan.lowVolume.length || scan.repeatedSnapshot.length || drift) {
+      const anomalies = { lowVolume: scan.lowVolume, repeatedSnapshot: scan.repeatedSnapshot, ...(drift ? { drift } : {}) };
+      report.anomalies = [...(report.anomalies || []), { market, session, ...anomalies }];
+      persistCoverage(market, { ...covNow[market], anomalies });
     }
   }
 
