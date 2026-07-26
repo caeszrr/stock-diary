@@ -48,6 +48,27 @@ export function isTradingDay(market, iso, holidays = loadHolidays()) {
   return !holidays[holidayKey(market)].includes(iso);
 }
 
+/** The trading day strictly before `iso` for `market`. */
+export function previousTradingDate(iso, market, holidays = loadHolidays()) {
+  let d = previousDate(iso);
+  for (let i = 0; i < 400; i += 1) {
+    if (isTradingDay(market, d, holidays)) return d;
+    d = previousDate(d);
+  }
+  return d;
+}
+
+/** The last `n` trading sessions on/before the reference day, oldest-first. */
+export function recentTradingSessions(market, n, { today, holidays = loadHolidays() } = {}) {
+  const sessions = [];
+  let d = expectedSessionDate(market, { today, holidays });
+  for (let i = 0; i < n; i += 1) {
+    sessions.push(d);
+    d = previousTradingDate(d, market, holidays);
+  }
+  return sessions.reverse();
+}
+
 /** Walks back from `iso` (inclusive) to the most recent trading day for `market`. */
 export function latestTradingDayOnOrBefore(market, iso, holidays = loadHolidays()) {
   let d = iso;

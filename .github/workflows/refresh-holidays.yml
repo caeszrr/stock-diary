@@ -1,0 +1,42 @@
+name: Refresh market holiday calendar
+
+# Pulls TWSE's official holiday schedule + recomputes the NYSE holiday rules into
+# config/market-holidays.json, so the pipeline/watchdog know which silence is
+# expected. Yearly (early January, when TWSE publishes the new year) plus a
+# monthly safety refresh; tolerant of TWSE fetch failure (keeps the existing
+# list). Discovered ad-hoc closures (typhoon days) are preserved across refreshes.
+
+on:
+  schedule:
+    - cron: '0 2 2 1 *'   # Jan 2, 02:00 UTC — after TWSE publishes the new year
+    - cron: '0 3 1 * *'   # 1st of each month — safety refresh
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      - name: Refresh holiday calendar
+        run: npm run fetch:holidays
+
+      - name: Commit if changed
+        run: |
+          git add config/market-holidays.json
+          if git diff --cached --quiet; then
+            echo "no holiday changes"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git commit -m "chore(holidays): refresh market holiday calendar $(date -u +%Y-%m-%d)"
+            git push || (git pull --rebase && git push)
+          fi

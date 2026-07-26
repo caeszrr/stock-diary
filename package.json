@@ -16,7 +16,10 @@
     "fetch:all": "npm run fetch:tw && npm run fetch:tpex && npm run fetch:us",
     "backfill": "node scripts/backfill.js",
     "repair:tw-gaps": "node scripts/repair-tw-gaps.js",
-    "validate": "node scripts/validate-tickers.js"
+    "validate": "node scripts/validate-tickers.js",
+    "watchdog": "node scripts/watchdog.js",
+    "watchdog:sweep": "WATCHDOG_SWEEP=1 node scripts/watchdog.js",
+    "fetch:holidays": "node scripts/fetch-holidays.js"
   },
   "devDependencies": {
     "vite": "^8.1.1"
