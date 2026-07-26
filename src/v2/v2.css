@@ -23,7 +23,7 @@
 }
 .v2-brand { font-size: var(--fs-lg); font-weight: 700; }
 .v2-badge {
-  background: var(--accent); color: #fff;
+  background: var(--accent); color: var(--on-accent);
   border-radius: var(--r-sm); padding: 0 var(--sp-2);
   font-size: var(--fs-base);
 }
@@ -38,7 +38,7 @@
   font-size: var(--fs-lg);
 }
 .v2-nav-item:hover { background: var(--bg); }
-.v2-nav-active { background: var(--accent); color: #fff; font-weight: 700; }
+.v2-nav-active { background: var(--accent); color: var(--on-accent); font-weight: 700; }
 .v2-nav-active:hover { background: var(--accent); }
 .v2-nav-disabled { color: var(--text-dim); cursor: not-allowed; opacity: 0.6; }
 .v2-back-v1 { margin-top: auto; color: var(--text-dim); font-size: var(--fs-base); min-height: var(--tap); display: flex; align-items: center; }
@@ -54,7 +54,7 @@
   min-height: var(--tap);
 }
 .v2-status-item { color: var(--text-dim); }
-.v2-status-off { opacity: 0.75; }
+.v2-status-off { /* 對比維持 AA:不再用 opacity 淡化(M10 審查修正) */ }
 .v2-status-dry {
   border: 1px solid var(--accent); color: var(--accent);
   border-radius: var(--r-sm); padding: var(--sp-1) var(--sp-2); font-weight: 700;
@@ -91,7 +91,7 @@
 }
 .v2-btn:hover { border-color: var(--accent); }
 .v2-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.v2-btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+.v2-btn-primary { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 700; }
 .v2-btn-danger { color: var(--up); border-color: var(--up); }
 .v2-btn-more { font-weight: 700; letter-spacing: 2px; }
 
@@ -135,7 +135,7 @@
 }
 .v2-step-done { border-color: var(--accent); color: var(--text); }
 .v2-step-done::before { content: '✓ '; color: var(--accent); font-weight: 700; }
-.v2-step-current { background: var(--accent); color: #fff; font-weight: 700; border-color: var(--accent); }
+.v2-step-current { background: var(--accent); color: var(--on-accent); font-weight: 700; border-color: var(--accent); }
 
 /* ---------- 唯讀提示條 / 警示條 ---------- */
 .v2-readonly-banner, .v2-alert-banner {
@@ -192,7 +192,7 @@
 
 /* ---------- 對話框 ---------- */
 .v2-dialog { border: none; border-radius: var(--r-md); box-shadow: var(--shadow-card); padding: 0; max-width: 520px; width: calc(100% - 2 * var(--sp-5)); background: var(--bg); color: var(--text); font-size: var(--fs-base); }
-.v2-dialog::backdrop { background: rgba(0, 0, 0, 0.45); }
+.v2-dialog::backdrop { background: var(--scrim); }
 .v2-dialog-body { padding: var(--sp-5); display: flex; flex-direction: column; gap: var(--sp-4); }
 .v2-dialog-title { font-size: var(--fs-num); font-weight: 700; margin: 0; }
 .v2-dialog-actions { display: flex; gap: var(--sp-3); justify-content: flex-end; flex-wrap: wrap; }

@@ -21,6 +21,10 @@
   --r-sm: 8px;
   --r-md: 12px;
   --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --scrim: rgba(0, 0, 0, 0.45);
+
+  /* 強調色上的文字色(深淺模式都用白,對比 ≥7:1) */
+  --on-accent: #fff;
 
   /* 觸控目標下限 */
   --tap: 44px;
