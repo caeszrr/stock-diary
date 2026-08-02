@@ -1,5 +1,6 @@
 import { formatDateHeader, escapeHtml } from '../lib/format.js';
 import { renderCell } from './cell.js';
+import { marketKeysFor } from '../lib/marketCalendar.js';
 import { getMarketNote, setMarketNote, getProfile, setProfile, isPinned } from '../lib/userData.js';
 
 /** Union of every date that appears under any symbol in dataMap, sorted ascending. */
@@ -51,10 +52,13 @@ function totalColumnCount(dateColumns, pinnedDates) {
   return dateColumns.length + (pinnedDates.length ? pinnedDates.length + 1 : 0);
 }
 
-function buildRow({ symbol, name_zh, group, pending, isUserAdded }, dataMap, pinnedDataMap, dateColumns, pinnedDates, { onHideTicker, onRemoveTicker } = {}) {
+function buildRow({ symbol, name_zh, group, market, pending, isUserAdded }, dataMap, pinnedDataMap, dateColumns, pinnedDates, { onHideTicker, onRemoveTicker, coverage = {} } = {}) {
   const tr = document.createElement('tr');
   tr.className = 'stock-row';
   tr.dataset.symbol = symbol;
+
+  const { cov: covKey, cal } = marketKeysFor({ market, symbol });
+  const stateCtx = { covMarket: covKey, calMarket: cal, coverage: covKey ? coverage[covKey] : null };
 
   const nameCell = document.createElement('td');
   nameCell.className = 'name-cell sticky-col';
@@ -93,14 +97,14 @@ function buildRow({ symbol, name_zh, group, pending, isUserAdded }, dataMap, pin
   tr.appendChild(nameCell);
 
   for (const date of dateColumns) {
-    tr.appendChild(renderCell(dataMap[symbol]?.[date], { symbol, date }));
+    tr.appendChild(renderCell(dataMap[symbol]?.[date], { symbol, date, stateCtx }));
   }
   if (pinnedDates.length) {
     const sep = document.createElement('td');
     sep.className = 'pin-separator';
     tr.appendChild(sep);
     for (const date of pinnedDates) {
-      tr.appendChild(renderCell(recFor(symbol, date, dataMap, pinnedDataMap), { symbol, date }));
+      tr.appendChild(renderCell(recFor(symbol, date, dataMap, pinnedDataMap), { symbol, date, stateCtx }));
     }
   }
   return tr;
@@ -164,6 +168,7 @@ export function renderMatrix(container, {
   onRemoveTicker,
   pinnedIndexTickers,
   groupedTickers,
+  coverage = {},
 }) {
   const dateColumns = collectDateColumns(dataMap);
   const totalCols = totalColumnCount(dateColumns, pinnedDates);
@@ -178,7 +183,7 @@ export function renderMatrix(container, {
   const indexTbodyGroup = document.createElement('tbody');
   indexTbodyGroup.className = 'pinned-indices';
   for (const idx of pinnedIndexTickers) {
-    indexTbodyGroup.appendChild(buildRow(idx, dataMap, pinnedDataMap, dateColumns, pinnedDates));
+    indexTbodyGroup.appendChild(buildRow(idx, dataMap, pinnedDataMap, dateColumns, pinnedDates, { coverage }));
   }
   indexTbodyGroup.appendChild(buildMarketNoteRow(dateColumns, pinnedDates));
   table.appendChild(indexTbodyGroup);
@@ -189,7 +194,7 @@ export function renderMatrix(container, {
     tbody.appendChild(buildGroupHeaderRow(group, totalCols, collapsed, onToggleGroup));
     if (!collapsed) {
       for (const ticker of tickers) {
-        tbody.appendChild(buildRow(ticker, dataMap, pinnedDataMap, dateColumns, pinnedDates, { onHideTicker, onRemoveTicker }));
+        tbody.appendChild(buildRow(ticker, dataMap, pinnedDataMap, dateColumns, pinnedDates, { onHideTicker, onRemoveTicker, coverage }));
       }
     }
   }

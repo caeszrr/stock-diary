@@ -21,6 +21,37 @@ for the full original product spec.
   display via the existing toggle — don't add English-only strings to
   user-facing UI.
 
+## Data completeness & monitoring (standing rules)
+
+Born from a silent partial-update failure (2026-07-24: a stale TWSE
+`STOCK_DAY_ALL` snapshot left all 上市 symbols blank while the run stayed
+green). These are non-negotiable:
+
+- **Presence is not completeness.** "A file exists for this session" must
+  never count as success. Success = every *expected* symbol has a record for
+  the *expected trading day*. `ok`/`complete` come from the coverage check
+  (`scripts/lib/coverage.js`), never from `count > 0`.
+- **Never hardcode what "complete" means.** Derive the expectation at runtime
+  (configured watchlist ∪ previous-session symbols; the exchange's own
+  reported count where available). A hardcoded list goes stale the moment a
+  stock delists or a user adds one.
+- **Re-request only what's missing.** On a gap, targeted per-symbol re-fetch
+  with backoff — never re-pull the whole market (re-triggers throttling).
+- **Heal before alerting.** The watchdog repairs transient gaps first and only
+  escalates (a GitHub Issue) what a repair cannot fix.
+- **Never alarm when silence is correct.** Weekends, TWSE holidays (incl.
+  ad-hoc typhoon closures discovered and recorded in
+  `config/market-holidays.json` `twDiscovered`), and US market holidays are
+  expected silence. Only judge sessions that should already be published
+  (before the market's current day, or one the fetch already recorded).
+- **A confirmed no-trade is a verdict, not a failure.** If a targeted re-fetch
+  confirms the exchange has no record (zero volume/suspension/halt), mark it
+  `no_trade`/`suspended`/`market_closed` and stop retrying — a legitimate empty
+  cell, distinct from an unexplained gap.
+- **Commit partial, never mark it complete.** If the source only gives part of
+  a session, commit what there is with `complete:false`; do not fabricate the
+  rest.
+
 ## Storage abstraction (future-proofing, do NOT build ahead of need)
 
 All user-generated data goes through `src/lib/userData.js`, which is the only

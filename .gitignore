@@ -12,6 +12,9 @@ dist
 dist-ssr
 *.local
 
+# Watchdog run artifact (regenerated each run, never committed)
+watchdog-report.json
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

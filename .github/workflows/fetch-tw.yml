@@ -4,10 +4,11 @@ on:
   schedule:
     # 07:10 UTC = 15:10 Taipei, shortly after the 13:30 close. Weekdays only.
     - cron: '10 7 * * 1-5'
-    # Retry: 08:10 UTC. Re-runs the same fetch; if the 07:10 run already got
-    # today's close, this run fetches identical data, the diff is empty, and
-    # the commit/deploy steps below are skipped automatically — so this only
-    # "acts" when the first run genuinely produced nothing yet.
+    # Retry: 08:10 UTC. The fetch scripts now self-heal (targeted per-symbol
+    # repair of any missing watchlist symbol) and write a completeness verdict
+    # to data/status.json's `coverage`. A run that is still INCOMPLETE (not just
+    # absent) exits non-zero, so this retry cron meaningfully re-attempts an
+    # incomplete session instead of trusting "a file exists" as success.
     - cron: '10 8 * * 1-5'
   workflow_dispatch: {}
 
@@ -36,10 +37,19 @@ jobs:
 
       - run: npm ci
 
-      - name: Fetch TWSE (上市) + TPEx (上櫃)
-        run: |
-          npm run fetch:tw
-          npm run fetch:tpex
+      # continue-on-error so an incomplete/failed session still commits the
+      # partial data + the coverage record (marked complete:false) below —
+      # "commit partial if that's all the source will give, but never mark it
+      # complete." The run is failed at the end for visibility + retry.
+      - name: Fetch TWSE (上市)
+        id: fetch-tw
+        continue-on-error: true
+        run: npm run fetch:tw
+
+      - name: Fetch TPEx (上櫃)
+        id: fetch-tpex
+        continue-on-error: true
+        run: npm run fetch:tpex
 
       - name: Check for changes
         id: git-check
@@ -77,3 +87,11 @@ jobs:
         if: steps.git-check.outputs.changed == 'true'
         id: deployment
         uses: actions/deploy-pages@v4
+
+      # Surface an incomplete/failed session (data + coverage already committed
+      # above): fail the run so it's visible and the retry cron re-attempts.
+      - name: Fail run if a session was incomplete
+        if: steps.fetch-tw.outcome == 'failure' || steps.fetch-tpex.outcome == 'failure'
+        run: |
+          echo "::warning::A TW session was incomplete or failed — see data/status.json coverage + the fetch step logs. The retry cron will re-attempt; the watchdog will escalate if it persists."
+          exit 1

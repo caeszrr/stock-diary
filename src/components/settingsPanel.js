@@ -11,7 +11,7 @@ function alertZh(msg) {
  * { title, render(container) } — later phases (start mode, install guide,
  * 使用說明) append sections here without touching this file's structure.
  */
-export function renderSettings(container, { onStartModeChange, onUnhideTicker, extraSections = [] } = {}) {
+export function renderSettings(container, { onStartModeChange, onUnhideTicker, extraSections = [], onOpen } = {}) {
   const btn = document.createElement('button');
   btn.type = 'button';
   btn.className = 'settings-btn';
@@ -151,6 +151,7 @@ export function renderSettings(container, { onStartModeChange, onUnhideTicker, e
   function open() {
     refreshHiddenList();
     refreshModeNote();
+    onOpen?.({ body });
     overlay.classList.remove('hidden');
   }
   function close() {

@@ -1,0 +1,136 @@
+name: Data watchdog
+
+# Self-healing completeness monitor. Heals transient gaps (targeted re-fetch of
+# only the missing symbols), reaches a verdict on the rest (a confirmed no-trade
+# is not a failure), and only escalates unresolved gaps by opening/updating a
+# GitHub Issue (which emails the repo owner — the free alert channel).
+#
+# The script's first action is cheap: read coverage, and if the recent window is
+# complete it exits in seconds having made zero network calls. So these frequent
+# runs are polite to TWSE/Yahoo — a healthy or non-trading day does nothing.
+
+on:
+  schedule:
+    # Escalating passes after the TW fetch window (07:10/08:10 UTC): +30m, +90m, +3h.
+    - cron: '40 7 * * 1-5'
+    - cron: '40 8 * * 1-5'
+    - cron: '10 10 * * 1-5'
+    # Escalating passes after the US fetch window (22:30/23:30 UTC): +30m, +90m, +3h.
+    # The +90m/+180m passes land at 00:00/01:30 UTC — the day AFTER the Tue-Sat
+    # fetch days — so Wed-Sun = 3,4,5,6,0. Must be written '3-6,0'; a wrapping
+    # range like '3-0' is invalid cron and makes GitHub reject the whole file.
+    - cron: '0 23 * * 2-6'
+    - cron: '0 0 * * 3-6,0'
+    - cron: '30 1 * * 3-6,0'
+    # Daily sweep: re-check the last 14 sessions and heal any incomplete one.
+    - cron: '0 12 * * *'
+  workflow_dispatch:
+    inputs:
+      sweep:
+        description: 'Sweep the last 14 sessions (not just the latest)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+  issues: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+
+      # The daily 12:00 UTC cron (and a dispatch asking for it) runs the 14-session sweep.
+      - name: Decide sweep mode
+        id: mode
+        run: |
+          if [ "${{ github.event.schedule }}" = "0 12 * * *" ] || [ "${{ github.event.inputs.sweep }}" = "true" ]; then
+            echo "sweep=1" >> "$GITHUB_OUTPUT"
+          else
+            echo "sweep=0" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Run watchdog
+        id: watchdog
+        continue-on-error: true
+        env:
+          WATCHDOG_SWEEP: ${{ steps.mode.outputs.sweep }}
+        run: npm run watchdog
+
+      - name: Check for changes
+        id: git-check
+        run: |
+          git add public/data config/market-holidays.json
+          if git diff --cached --quiet; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Commit and push healed data
+        if: steps.git-check.outputs.changed == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git commit -m "chore(watchdog): heal data / update coverage $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push || (git pull --rebase && git push)
+
+      - name: Setup Pages
+        if: steps.git-check.outputs.changed == 'true'
+        uses: actions/configure-pages@v5
+      - name: Build
+        if: steps.git-check.outputs.changed == 'true'
+        run: npm run build
+      - name: Upload Pages artifact
+        if: steps.git-check.outputs.changed == 'true'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - name: Deploy to GitHub Pages
+        if: steps.git-check.outputs.changed == 'true'
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+      # Escalate ONLY unresolved gaps (heal already tried; no-trade verdicts are
+      # not failures). One issue per market+session, updated not duplicated.
+      - name: Escalate unresolved gaps
+        if: steps.watchdog.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          node -e '
+            const r = require("./public/data/watchdog-report.json");
+            for (const u of (r.unresolved || [])) {
+              console.log(JSON.stringify({ title: `資料異常：${u.label} ${u.session}`, market: u.market, session: u.session, label: u.label, symbols: u.symbols }));
+            }
+          ' > gaps.jsonl || true
+          if [ ! -s gaps.jsonl ]; then
+            echo "Watchdog failed but produced no unresolved-gap list — see logs."; exit 1
+          fi
+          while IFS= read -r line; do
+            title=$(echo "$line" | node -e 'process.stdin.once("data",d=>process.stdout.write(JSON.parse(d).title))')
+            body=$(echo "$line" | node -e 'process.stdin.once("data",d=>{const g=JSON.parse(d);process.stdout.write(`市場：${g.label}\n交易日：${g.session}\n仍缺少（已嘗試定向補抓仍失敗）：\n${g.symbols.map(s=>"- "+s).join("\n")}\n\n已嘗試：定向重新抓取缺漏股票（指數退避）。此為系統自動通報。\n（GitHub 會將此 Issue 以 email 通知維護者。）`)})')
+            existing=$(gh issue list --state open --search "in:title \"$title\"" --json number --jq ".[0].number" || echo "")
+            if [ -n "$existing" ]; then
+              gh issue comment "$existing" --body "$body"$'\n\n（仍未解決，於 '"$(date -u +%Y-%m-%dT%H:%M:%SZ)"' 再次檢查）"
+            else
+              gh issue create --title "$title" --body "$body" --label "data-gap" 2>/dev/null || gh issue create --title "$title" --body "$body"
+            fi
+          done < gaps.jsonl
+          echo "::warning::Watchdog escalated unresolved data gap(s) — a GitHub Issue was opened/updated."
+          exit 1
