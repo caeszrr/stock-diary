@@ -44,5 +44,26 @@
       "00687B"
     ],
     "usFailures": []
+  },
+  "coverage": {
+    "tw": {
+      "sessionDate": "2026-07-31",
+      "expectedCount": 67,
+      "actualCount": 67,
+      "missingCodes": [],
+      "resolved": {},
+      "stale": false,
+      "complete": true,
+      "lastSuccessfulWrite": "2026-08-02T14:09:31.146Z",
+      "health": "healthy",
+      "anomalies": {
+        "lowVolume": [
+          "2408",
+          "6213",
+          "2327"
+        ],
+        "repeatedSnapshot": []
+      }
+    }
   }
 }
