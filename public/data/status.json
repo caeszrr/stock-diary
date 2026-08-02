@@ -1,22 +1,22 @@
 {
   "tw": {
-    "lastRun": "2026-07-26T14:43:23.131Z",
-    "latestSessionDate": "2026-07-24",
+    "lastRun": "2026-07-31T15:49:22.753Z",
+    "latestSessionDate": "2026-07-30",
     "watchlistCount": 67,
-    "fullMarketCount": 1371,
+    "fullMarketCount": 1373,
     "ok": true
   },
   "tpex": {
-    "lastRun": "2026-07-24T13:07:38.679Z",
-    "latestSessionDate": "2026-07-24",
+    "lastRun": "2026-07-31T15:49:43.927Z",
+    "latestSessionDate": "2026-07-31",
     "watchlistCount": 13,
-    "fullMarketCount": 10128,
+    "fullMarketCount": 10218,
     "ok": true
   },
   "us": {
-    "lastRun": "2026-07-26T07:57:32.263Z",
-    "latestSessionDate": "2026-07-24",
-    "watchlistCount": 94,
+    "lastRun": "2026-08-02T07:52:18.857Z",
+    "latestSessionDate": "2026-07-31",
+    "watchlistCount": 100,
     "indexCount": 20,
     "failures": [],
     "ok": true
