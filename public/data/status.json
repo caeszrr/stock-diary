@@ -61,7 +61,8 @@
         "snapshotDate": "2026-07-31",
         "taiex": true
       },
-      "lastSuccessfulWrite": "2026-08-03T16:14:25.084Z"
+      "lastSuccessfulWrite": "2026-08-03T16:14:25.084Z",
+      "health": "healthy"
     },
     "tpex": {
       "sessionDate": "2026-08-03",
@@ -75,7 +76,41 @@
         "count": 10199,
         "snapshotDate": "2026-08-03"
       },
-      "lastSuccessfulWrite": "2026-08-03T16:14:28.093Z"
+      "lastSuccessfulWrite": "2026-08-03T16:14:28.093Z",
+      "health": "healthy"
+    },
+    "us": {
+      "sessionDate": "2026-07-31",
+      "expectedCount": 20,
+      "actualCount": 20,
+      "missingCodes": [],
+      "resolved": {},
+      "stale": false,
+      "complete": true,
+      "lastSuccessfulWrite": "2026-08-03T17:30:34.973Z",
+      "health": "healthy"
+    },
+    "idxTw": {
+      "sessionDate": "2026-08-03",
+      "expectedCount": 1,
+      "actualCount": 1,
+      "missingCodes": [],
+      "resolved": {},
+      "stale": false,
+      "complete": true,
+      "lastSuccessfulWrite": "2026-08-03T17:30:34.978Z",
+      "health": "healthy"
+    },
+    "idxUs": {
+      "sessionDate": "2026-07-31",
+      "expectedCount": 4,
+      "actualCount": 4,
+      "missingCodes": [],
+      "resolved": {},
+      "stale": false,
+      "complete": true,
+      "lastSuccessfulWrite": "2026-08-03T17:30:34.981Z",
+      "health": "healthy"
     }
   }
 }

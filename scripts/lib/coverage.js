@@ -59,9 +59,9 @@ export function previousTradingDate(iso, market, holidays = loadHolidays()) {
 }
 
 /** The last `n` trading sessions on/before the reference day, oldest-first. */
-export function recentTradingSessions(market, n, { today, holidays = loadHolidays() } = {}) {
+export function recentTradingSessions(market, n, { today, holidays = loadHolidays(), now } = {}) {
   const sessions = [];
-  let d = expectedSessionDate(market, { today, holidays });
+  let d = expectedSessionDate(market, { today, holidays, now });
   for (let i = 0; i < n; i += 1) {
     sessions.push(d);
     d = previousTradingDate(d, market, holidays);

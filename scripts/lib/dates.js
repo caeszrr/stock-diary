@@ -24,14 +24,14 @@ export function isoToCompactAD(iso) {
   return iso.replaceAll('-', '');
 }
 
-/** Today's date in Asia/Taipei as "YYYY-MM-DD". */
-export function todayTaipei() {
+/** Today's date in Asia/Taipei as "YYYY-MM-DD". `now` is injectable for tests. */
+export function todayTaipei(now = new Date()) {
   const parts = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Taipei',
     year: 'numeric',
     month: '2-digit',
     day: '2-digit',
-  }).formatToParts(new Date());
+  }).formatToParts(now);
   const map = Object.fromEntries(parts.map((p) => [p.type, p.value]));
   return `${map.year}-${map.month}-${map.day}`;
 }

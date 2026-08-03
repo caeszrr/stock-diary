@@ -11,6 +11,7 @@ import {
   buildCoverage,
   writeCoverage,
 } from './lib/coverage.js';
+import { sweepRecentSessions } from './lib/recentSweep.js';
 
 /**
  * Targeted, missing-only repair: when the bulk STOCK_DAY_ALL snapshot is stale
@@ -102,6 +103,19 @@ async function main() {
     symbols[code] = { name, market: 'twse' };
   }
   writeJson('tw-symbols.json', symbols, { pretty: false });
+
+  // ---- Delivery-time independence ----
+  // Everything above targets the session this run was scheduled for. That is
+  // only correct if the run fired near its cron time, which is not something
+  // this repo controls (see lib/recentSweep.js). So before reporting, repair any
+  // of the last few sessions that is missing — including TAIEX in the idx store,
+  // which nothing used to heal. Zero network calls when there is nothing to fix.
+  await sweepRecentSessions('tw', { holidays, logPrefix: 'fetch-tw' });
+
+  // Re-read presence after the sweep so the verdict reflects any repair it made.
+  present = presentSymbols('tw', expectedDate, expected);
+  missing = expected.filter((s) => !present.includes(s));
+  taiexHasSession = presentSymbols('idx', expectedDate, ['TAIEX']).length > 0;
 
   const coverage = buildCoverage({
     market: 'tw',

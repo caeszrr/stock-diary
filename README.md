@@ -289,6 +289,47 @@ checks the JSON on disk; nobody was checking the page.
   expectation on the watchdog's 00:00/01:30 UTC passes, which were reading the
   rolled-over UTC date as a US session.
 
+### Making the pipeline independent of when GitHub runs it
+
+The grace window above stops the *false alarm*, but it does nothing about the
+*missed session* — and the missed session was the actual damage. So the fetch
+scripts no longer ask "what is today's session?" at all.
+
+Every fetch run now sweeps the **last 3 trading sessions** and repairs any that
+is missing or incomplete (`scripts/lib/recentSweep.js`), the same posture the
+watchdog's daily sweep already took. A run that fires on time, six hours late,
+or not until the next morning all reach the same result, because the answer no
+longer depends on the clock — only on what is actually on disk versus what the
+calendar says should be. Three sessions covers a long weekend plus one dead
+run; the deep 14-session sweep stays with the watchdog.
+
+Cost on a healthy day is **zero network calls** — the scan reads month files and
+finds nothing missing. Traffic happens only where there is a real gap, and
+symbols already carrying a verdict (`no_trade`/`suspended`/`market_closed`/
+`no_history`) are skipped, so a legitimately empty cell never becomes permanent
+retry traffic.
+
+The sweep, the group definitions, and the verdict logic are shared with the
+watchdog (`scripts/lib/sessionSweep.js`, `scripts/lib/marketGroups.js`) rather
+than duplicated. That refactor is what closes **issue #3**: the group table used
+to live inside `watchdog.js` with no `idx` entry, so index gaps — TAIEX above
+all — could never self-heal. TAIEX and the US indices are now monitored on their
+own calendars (split deliberately: one combined `idx` group would mark every US
+index missing on a Taiwan holiday).
+
+It also closes **issue #2**. Persisting the coverage record used to sit behind an
+early `continue` that skipped already-complete sessions, so a market that was
+healthy all along never got a record and the UI rendered it as `—` —
+indistinguishable from "never checked". `us`, `idxTw` and `idxUs` now carry
+records like everything else. That is the mirror image of "presence is not
+completeness": **absence of a record must not be the only evidence of health.**
+
+Cron minutes were also moved off round numbers (`:13`, `:27`, `:43`, `:53`…).
+GitHub's scheduler is most congested at `:00`, and this measurably reduces queue
+delay — but be clear about proportions: the observed drift was **6–9 hours**, and
+minute-jitter does not touch that magnitude. The sweep is what actually fixes
+this; the jitter is a cheap extra.
+
 ### The check itself
 
 `scripts/synthetic-check.js` (`npm run synthetic`,

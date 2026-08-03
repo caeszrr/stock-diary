@@ -18,19 +18,16 @@
 
 import fs from 'node:fs';
 import path from 'node:path';
-import { fetchListedHistory } from './lib/twse.js';
-import { fetchDaily } from './lib/yahoo.js';
-import { upsertRecords, readMonthFile, readJson, regenerateManifest } from './lib/jsonStore.js';
-import { loadTickers, isFetchable } from './lib/tickers.js';
-import { computeYearHighLow } from './lib/yearHighLow.js';
-import { isoYear, isoMonth, sleep, todayTaipei } from './lib/dates.js';
+import { readMonthFile, readJson, upsertRecords, regenerateManifest } from './lib/jsonStore.js';
+import { isoYear, isoMonth, sleep } from './lib/dates.js';
 import {
   loadHolidays,
-  recentTradingSessions,
   previousTradingDate,
   buildCoverage,
   writeCoverage,
 } from './lib/coverage.js';
+import { buildGroups } from './lib/marketGroups.js';
+import { presentForSession, judgeableSessions, healSession, judgeSession, resolvedSymbols } from './lib/sessionSweep.js';
 import { scanSanity, crossMarketDrift } from './lib/sanity.js';
 
 const SWEEP = process.env.WATCHDOG_SWEEP === '1' || process.argv.includes('--sweep');
@@ -38,55 +35,9 @@ const LOOKBACK = SWEEP ? 14 : 1;
 const HOLIDAYS_PATH = path.join(process.cwd(), 'config', 'market-holidays.json');
 
 const holidays = loadHolidays();
-const tickers = loadTickers().filter(isFetchable);
-
-// Each check group: which calendar drives it, which data store holds it, the
-// expected symbols, and how (if at all) a missing symbol/month can be repaired.
-const GROUPS = {
-  tw: {
-    label: '上市 (TWSE)',
-    calendar: 'tw',
-    store: 'tw',
-    symbols: tickers.filter((t) => t.market === 'twse').map((t) => t.symbol),
-    async fetchMonth(symbol, year, month) {
-      const rows = await fetchListedHistory(symbol, year, month);
-      return rows; // [{symbol,date,...}]
-    },
-  },
-  tpex: {
-    label: '上櫃 (TPEx)',
-    calendar: 'tw',
-    store: 'tw',
-    symbols: tickers.filter((t) => t.market === 'tpex').map((t) => t.symbol),
-    fetchMonth: null, // no working per-symbol historical endpoint (see scripts/lib/tpex.js)
-  },
-  us: {
-    label: '美股 (US)',
-    calendar: 'us',
-    store: 'us',
-    symbols: tickers.filter((t) => t.market === 'us').map((t) => t.symbol),
-    async fetchMonth(symbol, year, month) {
-      const y = Number(year);
-      const m = Number(month);
-      const period1 = Math.floor(Date.UTC(y, m - 1, 1) / 1000);
-      const period2 = Math.floor(Date.UTC(y, m, 1) / 1000); // first of next month (captures the whole month)
-      const { records } = await fetchDaily(symbol, { period1, period2 });
-      return records;
-    },
-  },
-};
-
-function has(store, symbol, date) {
-  return store[symbol] && store[symbol][date] && store[symbol][date].c !== undefined;
-}
-
-/** Reads which of `symbols` have `date` across the store's month file (cached per month). */
-function presentForSession(monthCache, storeName, date, symbols) {
-  const key = `${storeName}/${isoYear(date)}/${isoMonth(date)}`;
-  if (!monthCache.has(key)) monthCache.set(key, readMonthFile(storeName, isoYear(date), isoMonth(date)));
-  const store = monthCache.get(key);
-  return symbols.filter((s) => has(store, s, date));
-}
+// Group definitions (including the idx stores the watchdog previously ignored —
+// issue #3) live in lib/marketGroups.js, shared with every fetch script's sweep.
+const GROUPS = buildGroups();
 
 async function main() {
   const monthCache = new Map();
@@ -96,90 +47,61 @@ async function main() {
   const statusNow = readJson('status.json', {});
   for (const [market, g] of Object.entries(GROUPS)) {
     if (!g.symbols.length) continue;
-    // Only judge sessions that should already be PUBLISHED: strictly before the
-    // market's current day, OR the exact session the last fetch already recorded.
-    // This prevents falsely declaring today's not-yet-fetched session a gap or a
-    // "market closure" before its data has had any chance to arrive.
-    const marketToday = g.calendar === 'us' ? new Date().toISOString().slice(0, 10) : todayTaipei();
-    const covSession = statusNow.coverage?.[market]?.sessionDate;
-    const sessions = recentTradingSessions(g.calendar, LOOKBACK + 2, { holidays })
-      .filter((s) => s < marketToday || s === covSession)
-      .slice(-LOOKBACK);
+    // Only judge sessions that should already be PUBLISHED — enforced by the
+    // publish cutoff inside expectedSessionDate (see lib/sessionSweep.js), so a
+    // run can never declare today's not-yet-fetched session a gap or a closure.
+    const sessions = judgeableSessions(g, { lookback: LOOKBACK, holidays });
     const marketReport = { label: g.label, sessions: {} };
 
     for (const session of sessions) {
-      let present = presentForSession(monthCache, g.store, session, g.symbols);
-      let missing = g.symbols.filter((s) => !present.includes(s));
-      marketReport.sessions[session] = { expected: g.symbols.length, present: present.length, missing: [...missing] };
-      if (!missing.length) continue;
+      const before = presentForSession(monthCache, g.store, session, g.symbols);
+      const missingBefore = g.symbols.filter((s) => !before.includes(s));
+      marketReport.sessions[session] = { expected: g.symbols.length, present: before.length, missing: [...missingBefore] };
+      const isLatest = session === sessions[sessions.length - 1];
 
-      // ---- Heal: re-fetch only the missing symbols for this session's month ----
-      const monthKey = `${g.store}/${isoYear(session)}/${isoMonth(session)}`;
-      const fetchOutcome = new Map(); // symbol -> 'filled' | 'source-empty' | 'fetch-error' | 'no-repair-path'
-      if (g.fetchMonth) {
-        for (const symbol of missing) {
-          try {
-            const rows = await g.fetchMonth(symbol, isoYear(session), isoMonth(session));
-            networkCalls += 1;
-            const rec = rows.find((r) => r.date === session && r.c !== undefined);
-            if (rec) {
-              upsertRecords(g.store, [rec], { pretty: false });
-              // Recompute the 52-week high/low from stored history, same as the pipeline does.
-              const { yh, yl } = computeYearHighLow(g.store, symbol, session, new Map());
-              if (yh !== undefined || yl !== undefined) upsertRecords(g.store, [{ symbol, date: session, yh, yl }], { pretty: false });
-              fetchOutcome.set(symbol, 'filled');
-            } else {
-              fetchOutcome.set(symbol, 'source-empty'); // source responded, but this symbol had no trade that day
-            }
-          } catch (err) {
-            fetchOutcome.set(symbol, 'fetch-error');
-            console.error(`[watchdog] ${market} ${symbol} ${session} repair FAILED: ${err.message}`);
-          }
-          await sleep(300);
+      let present = before;
+      let missing = missingBefore;
+      let verdicts = {};
+
+      if (missingBefore.length) {
+        // ---- Heal: re-fetch only the missing symbols for this session ----
+        const healed = await healSession(g, session, {
+          monthCache,
+          onNetworkCall: () => { networkCalls += 1; },
+        });
+        present = healed.present;
+        missing = healed.missing;
+        marketReport.sessions[session].present = present.length;
+        marketReport.sessions[session].missing = [...missing];
+        if (healed.repaired.length) report.healed.push({ market, session, symbols: healed.repaired });
+
+        // ---- Reach a verdict for whatever is still missing ----
+        const judged = judgeSession(g, { present, missing, outcomes: healed.outcomes });
+        verdicts = judged.verdicts;
+        if (judged.marketClosed) {
+          // A genuine closure the planned calendar didn't list (typhoon day etc.).
+          // Record it and stop retrying.
+          recordDiscoveredClosure(g.calendar, session);
+          report.discoveredClosures.push({ market: g.calendar, session });
         }
-      } else {
-        missing.forEach((s) => fetchOutcome.set(s, 'no-repair-path'));
+
+        const unresolvedSyms = Object.keys(verdicts).filter((s) => verdicts[s] === 'unresolved');
+        if (unresolvedSyms.length) report.unresolved.push({ market, label: g.label, session, symbols: unresolvedSyms });
+        marketReport.sessions[session].verdicts = verdicts;
       }
-
-      // Re-read after healing.
-      monthCache.delete(monthKey);
-      present = presentForSession(monthCache, g.store, session, g.symbols);
-      missing = g.symbols.filter((s) => !present.includes(s));
-      marketReport.sessions[session].present = present.length;
-      marketReport.sessions[session].missing = [...missing];
-      const healedNow = [...fetchOutcome].filter(([, o]) => o === 'filled').map(([s]) => s);
-      if (healedNow.length) report.healed.push({ market, session, symbols: healedNow });
-
-      // ---- Reach a verdict for whatever is still missing ----
-      const verdicts = {};
-      const anySourceEmpty = missing.some((s) => fetchOutcome.get(s) === 'source-empty');
-      const anyFetchError = missing.some((s) => fetchOutcome.get(s) === 'fetch-error');
-
-      if (present.length === 0 && anySourceEmpty && !anyFetchError && g.fetchMonth) {
-        // Whole market absent AND the source confirms no session for the ones we
-        // checked, with no network errors → a genuine market closure the planned
-        // calendar didn't list (typhoon day etc.). Record it and stop retrying.
-        recordDiscoveredClosure(g.calendar, session);
-        report.discoveredClosures.push({ market: g.calendar, session });
-        missing.forEach((s) => (verdicts[s] = 'market_closed'));
-      } else {
-        for (const s of missing) {
-          const o = fetchOutcome.get(s);
-          if (o === 'source-empty') verdicts[s] = 'no_trade'; // source confirms this symbol did not trade
-          else if (o === 'no-repair-path') verdicts[s] = 'no_history'; // TPEx historical caveat, documented
-          else verdicts[s] = 'unresolved'; // fetch-error or still missing for an unknown reason
-        }
-      }
-
-      const unresolvedSyms = Object.entries(verdicts).filter(([, v]) => v === 'unresolved').map(([s]) => s);
-      if (unresolvedSyms.length) report.unresolved.push({ market, label: g.label, session, symbols: unresolvedSyms });
-
-      marketReport.sessions[session].verdicts = verdicts;
 
       // Persist a DETERMINISTIC coverage record for the latest session (verdicts
       // folded in). No per-run timestamp is added, so an unchanged state produces
       // byte-identical output → no git diff → no commit churn on healthy polls.
-      if (session === sessions[sessions.length - 1]) {
+      //
+      // This runs even when nothing was missing. It used to sit behind an early
+      // `continue` that skipped complete sessions, so a market that was healthy
+      // all along never got a record at all and the UI showed it as "—" —
+      // indistinguishable from "never checked" (issue #2). That is the mirror
+      // image of "presence is not completeness": absence of a record must not be
+      // the only evidence of health.
+      if (isLatest) {
+        const unresolvedSyms = Object.keys(verdicts).filter((s) => verdicts[s] === 'unresolved');
         const resolved = Object.fromEntries(Object.entries(verdicts).filter(([, v]) => v !== 'unresolved'));
         const record = buildCoverage({ market, sessionDate: session, expected: g.symbols, present, verdicts: resolved });
         record.health = unresolvedSyms.length ? 'gap' : missing.length ? 'resolved-empty' : 'healthy';
@@ -189,22 +111,12 @@ async function main() {
     report.markets[market] = marketReport;
   }
 
-  // Ensure every already-complete market carries a 'healthy' verdict (set once, then stable — no churn).
-  for (const [market, g] of Object.entries(GROUPS)) {
-    if (!g.symbols.length) continue;
-    const cov = readJson('status.json', {}).coverage?.[market];
-    if (cov && cov.complete && !cov.health) {
-      cov.health = 'healthy';
-      writeCoverage(market, cov);
-    }
-  }
-
   // ---- Phase F: sanity checks beyond presence (data can exist and still be wrong) ----
   const covNow = readJson('status.json', {}).coverage || {};
   const drift = crossMarketDrift(covNow.tw?.sessionDate, covNow.us?.sessionDate);
   if (drift) report.anomalies = [...(report.anomalies || []), { type: 'cross_market_drift', ...drift }];
   for (const [market, g] of Object.entries(GROUPS)) {
-    if (!g.symbols.length || !g.fetchMonth) continue; // tpex can't be re-verified per-symbol
+    if (!g.symbols.length || !g.fetchRows) continue; // tpex can't be re-verified per-symbol
     const session = covNow[market]?.sessionDate;
     if (!session) continue;
     const prev = previousTradingDate(session, g.calendar, holidays);
@@ -214,7 +126,7 @@ async function main() {
     // official close once re-fetched after close); heal only if the value changed.
     for (const s of suspects) {
       try {
-        const rows = await g.fetchMonth(s, isoYear(session), isoMonth(session));
+        const rows = await g.fetchRows(s, session);
         networkCalls += 1;
         const rec = rows.find((r) => r.date === session && r.c !== undefined);
         const cur = presentForSession(new Map(), g.store, session, [s]).length

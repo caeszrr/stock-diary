@@ -3,13 +3,13 @@ name: Fetch TW market data
 on:
   schedule:
     # 07:10 UTC = 15:10 Taipei, shortly after the 13:30 close. Weekdays only.
-    - cron: '10 7 * * 1-5'
+    - cron: '13 7 * * 1-5'
     # Retry: 08:10 UTC. The fetch scripts now self-heal (targeted per-symbol
     # repair of any missing watchlist symbol) and write a completeness verdict
     # to data/status.json's `coverage`. A run that is still INCOMPLETE (not just
     # absent) exits non-zero, so this retry cron meaningfully re-attempts an
     # incomplete session instead of trusting "a file exists" as success.
-    - cron: '10 8 * * 1-5'
+    - cron: '17 8 * * 1-5'
   workflow_dispatch: {}
 
 permissions:

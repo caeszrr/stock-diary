@@ -2,6 +2,7 @@ import { fetchDaily } from './lib/yahoo.js';
 import { upsertRecords, updateStatus, regenerateManifest } from './lib/jsonStore.js';
 import { loadTickers, isFetchable } from './lib/tickers.js';
 import { sleep } from './lib/dates.js';
+import { sweepRecentSessions } from './lib/recentSweep.js';
 import {
   loadHolidays,
   expectedSessionDate,
@@ -71,6 +72,14 @@ async function main() {
     upsertRecords('idx', repaired, { pretty: false });
     idxPresent = presentSymbols('idx', sessionDate, usIndices);
   }
+
+  // Delivery-time independence (see lib/recentSweep.js): repair any of the last
+  // few sessions still missing, so a run that fires hours late — or a day whose
+  // run never fired — self-corrects instead of only ever judging "today".
+  await sweepRecentSessions('us', { holidays, logPrefix: 'fetch-us' });
+  present = presentSymbols('us', sessionDate, usStocks);
+  missing = usStocks.filter((s) => !present.includes(s));
+  idxPresent = presentSymbols('idx', sessionDate, usIndices);
 
   const stale = consensusMax !== '' && consensusMax < calendarExpected;
   const coverage = buildCoverage({
