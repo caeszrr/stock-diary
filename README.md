@@ -8,7 +8,10 @@ layer, add-stock + start modes, GitHub Actions + Pages deploy, PWA + mobile
 polish, and this docs/handoff pass. A later hardening pass added **completeness
 monitoring**: the pipeline verifies every session is complete (not merely
 present), self-heals gaps, and a watchdog escalates only what it can't fix —
-see "Self-monitoring: coverage records + watchdog" below.
+see "Self-monitoring: coverage records + watchdog" below. After the first month
+rollover (2026-08-03) broke the 8月 tab while that watchdog stayed green, a
+**synthetic check** was added that opens the deployed site and asserts what a
+human sees — see "Synthetic site check" below.
 
 **Live site**: https://caeszrr.github.io/stock-diary/
 **Repo**: https://github.com/caeszrr/stock-diary
@@ -240,6 +243,104 @@ is detected instead of being silently accepted (this was added after a
   (tick *sweep* to re-check the last 14 sessions), or for a specific
   symbol/date use **Backfill historical data** with `symbols` set. Locally:
   `npm run watchdog:sweep`, or `BACKFILL_SYMBOLS=2330 npm run backfill`.
+
+## Synthetic site check: monitoring what a human actually sees
+
+Added after **2026-08-03, the app's first ever month rollover**, when the 8月
+tab rendered greyed out and unclickable for the whole evening while the data
+watchdog reported green. That combination is the point: *completeness
+monitoring is structurally unable to see a rendering failure.* The watchdog
+checks the JSON on disk; nobody was checking the page.
+
+### What actually happened (three separate faults)
+
+1. **The pipeline never ran that day.** GitHub delivered the 07:10 UTC TW cron
+   at **16:09 UTC — about 9 hours late**. This is not a one-off: this repo's
+   scheduled workflows have been running hours behind for weeks (the US
+   22:30 UTC cron has been landing ~07:40 UTC the next morning). 2026-08-03 was
+   simply the day the drift pushed a TW run past **Taipei midnight**, by which
+   time TWSE's bulk `STOCK_DAY_ALL` snapshot had rolled over, so 上市 and TAIEX
+   missed the session entirely. **Cron delivery time is not something this repo
+   controls, so nothing here should assume it.**
+2. **The UI treated "no data yet" as "this month does not exist."** The month
+   tab list was built from `manifest.json` alone, which `regenerateManifest()`
+   produces by scanning `public/data/` — data, never calendar. So a month
+   before its first successful run had no entry and the tab was hard-disabled,
+   and `main.js` silently fell back to July.
+3. **`expectedSessionDate()` assumed a run lands before local midnight.** The
+   late run therefore demanded a 2026-08-04 session that had not traded and
+   declared all 67 上市 + 13 上櫃 symbols missing — a false alarm primed to
+   become a watchdog Issue.
+
+### The rules that came out of it
+
+- **Month list = calendar ∪ data, never data alone** (`src/lib/monthTabs.js`).
+  The **current month and current year are always clickable**, data or not. A
+  month the pipeline missed entirely still renders rather than vanishing;
+  future months stay disabled because they cannot have data.
+- **A valid-but-empty month is a normal state with an explanation**, not a
+  blank grid: 本月尚無資料，今日收盤後更新 / 本月尚未開始交易 / 週末休市，本月尚無資料.
+- **The default view is the current Taipei month, always.** The one case that
+  can still degrade — a manifest that failed to load — says so on screen
+  instead of silently showing an older month.
+- **Session expectation comes from the market's own clock**, via a publish
+  cutoff (15:00 Taipei / 17:00 New York) rather than "today or earlier". A late
+  run still judges the session it was meant to judge. This also fixed the US
+  expectation on the watchdog's 00:00/01:30 UTC passes, which were reading the
+  rolled-over UTC date as a US session.
+
+### The check itself
+
+`scripts/synthetic-check.js` (`npm run synthetic`,
+`.github/workflows/synthetic-check.yml`) opens the **deployed** site headlessly
+at 1400×900 and 390×844 and asserts:
+
+- the current month tab exists, is **enabled**, and is **selected by default**;
+  the current year tab exists and is enabled
+- **2330** and **TAIEX** show a real close for the latest expected trading
+  session
+- the service worker has taken control and the page is running the build that
+  is actually deployed (`window.__STOCK_DIARY_BUILD__` vs a cache-busted
+  `version.json`) — not a frozen copy
+- **zero console errors**, via both `page.on('console')` and
+  `page.on('pageerror')`
+
+Scheduled after each market's update window plus once daily. **Green does
+nothing at all** — no Issue, no comment, no commit, no email; the job has
+`contents: read` only, so it cannot churn a data commit. On failure it opens
+**one** issue (`網站異常：使用者看到的畫面檢查未通過`, label `site-down`) and
+*comments* on it thereafter rather than duplicating, naming the failed
+assertions and linking the screenshot artifact.
+
+Two deliberate trade-offs worth knowing:
+
+- **Freshness has a grace window** (`SYNTHETIC_GRACE_HOURS`, default 6). Given
+  the cron drift above, demanding the newest session the instant its publish
+  cutoff passes would alarm on a merely-late-but-working pipeline. Beyond the
+  grace window, a missing session is a real failure. Lower it if the drift ever
+  goes away.
+- **A recovered check does not close its issue.** "Silent when green" was an
+  explicit requirement, and closing an issue emails you too. The cost is that a
+  resolved issue stays open until closed by hand — the same convention the data
+  watchdog already follows.
+
+`workflow_dispatch` takes **`use_branch_build`**, which builds and serves the
+checked-out branch locally and checks that instead of the live site — so a
+change can be verified *before* it is merged.
+
+### Rollover is covered by CI now
+
+`.github/workflows/ci.yml` runs `npm test` + `npm run build` on every push/PR.
+`src/lib/monthTabs.test.js` and `scripts/lib/coverage.test.js` **simulate the
+clock** on the first calendar day and the first trading day of a new month
+(including a Saturday 1st, a year rollover, consecutive holidays, and a run
+delivered after Taipei midnight), so 2026-09-01 is verified here rather than in
+production.
+
+> `jsdom` is pinned to `^26` deliberately: `jsdom@30` requires Node 22, and
+> this project targets Node 20 everywhere. Under Node 20 the entire DOM test
+> file failed to *start* while the suite still printed "24 passed" — a test
+> that cannot start is not a test.
 
 ## Future work (Phase 8 — skipped)
 
