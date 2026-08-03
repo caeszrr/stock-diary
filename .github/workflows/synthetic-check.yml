@@ -110,7 +110,7 @@ jobs:
             const body = [
               `網站：${r.siteUrl || "(未知)"}`,
               `檢查時間：${r.checkedAt || "(未知)"}`,
-              r.targets ? `應顯示的最新交易日：${r.targets.latest}（寬限 ${r.graceHours} 小時後至少要有 ${r.targets.required}）` : "",
+              r.targets ? `應顯示的最新交易日：${r.targets.latest}（寬限 ${r.graceHours} 小時後至少要有 ${r.targets.required}）` : null,
               "",
               "### 未通過的檢查項目",
               lines,
@@ -119,7 +119,7 @@ jobs:
               "",
               "此檢查會實際打開已部署的網站，斷言使用者眼睛看到的東西（本月分頁是否存在／可點擊／預設選取、2330 與 TAIEX 是否有最新交易日的數字、Service Worker 是否為最新版、有無 console 錯誤）。資料完整性監控看不到這一類故障。",
               "（GitHub 會將此 Issue 以 email 通知維護者。）",
-            ].filter((l) => l !== "").join("\n");
+            ].filter((l) => l !== null).join("\n");
             fs.writeFileSync("issue-body.md", body);
           '
           existing=$(gh issue list --state open --search "in:title \"$TITLE\"" --json number,title \
