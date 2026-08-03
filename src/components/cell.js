@@ -106,6 +106,10 @@ function noteEditorHtml(symbol, date, note) {
 export function renderCell(rec, { symbol, date, stateCtx } = {}) {
   const td = document.createElement('td');
   td.className = 'cell';
+  // Addressable by symbol+date so the synthetic check (and any future test) can
+  // assert one cell's value without counting columns.
+  if (symbol) td.dataset.symbol = symbol;
+  if (date) td.dataset.date = date;
   if (!rec || rec.c === undefined) {
     td.innerHTML = blankStateHtml(symbol, date, stateCtx);
     return td;

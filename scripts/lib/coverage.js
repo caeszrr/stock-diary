@@ -9,7 +9,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { readMonthFile, readJson, writeJson } from './jsonStore.js';
-import { isoYear, isoMonth, todayTaipei } from './dates.js';
+import { isoYear, isoMonth } from './dates.js';
 
 const HOLIDAYS_PATH = path.join(process.cwd(), 'config', 'market-holidays.json');
 
@@ -80,13 +80,52 @@ export function latestTradingDayOnOrBefore(market, iso, holidays = loadHolidays(
 }
 
 /**
- * The trading day this pipeline run should have produced. For tw/tpex the run
- * fires after the Taipei close, so the reference "today" is the Taipei date; for
- * us the run fires after the US close (evening UTC), so the UTC date is the US
- * session date. Callers may override `today` (used by tests and the watchdog).
+ * The wall-clock hour in a market's own timezone by which that day's session is
+ * both closed and published by the source. Before the cutoff, "today" is not yet
+ * an expected session.
+ *
+ * tw: 13:30 close, STOCK_DAY_ALL lands ~14:00-15:00 (the 15:10 Taipei cron).
+ * us: 16:00 ET close, Yahoo settles shortly after (the 22:30 UTC cron).
  */
-export function expectedSessionDate(market, { today, holidays = loadHolidays() } = {}) {
-  const ref = today || (market === 'us' ? new Date().toISOString().slice(0, 10) : todayTaipei());
+const PUBLISH_CUTOFF = {
+  tw: { tz: 'Asia/Taipei', hour: 15 },
+  us: { tz: 'America/New_York', hour: 17 },
+};
+
+/** The calendar date and 0-23 hour right now in `tz`. */
+function nowInZone(tz, now = new Date()) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: tz,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(now);
+  const m = Object.fromEntries(parts.map((p) => [p.type, p.value]));
+  return { date: `${m.year}-${m.month}-${m.day}`, hour: Number(m.hour) };
+}
+
+/**
+ * The trading day this pipeline run should have produced — derived from the
+ * market's own clock, never from UTC or from the runner's assumption about when
+ * it fired.
+ *
+ * Anchoring on "today or earlier" silently assumed every run lands between the
+ * close and local midnight. GitHub's scheduler regularly delivers this repo's
+ * crons hours late (see README); on 2026-08-03 the 07:10 UTC TW cron landed at
+ * 16:09 UTC = 00:09 Taipei the NEXT day, so the run demanded a 2026-08-04
+ * session that had not traded and declared all 67 上市 symbols missing. Below
+ * the publish cutoff we expect the previous trading day instead, so a late run
+ * still judges the session it was meant to judge.
+ *
+ * Callers may override `today` (the watchdog and tests do) or `now` (tests).
+ */
+export function expectedSessionDate(market, { today, holidays = loadHolidays(), now } = {}) {
+  if (today) return latestTradingDayOnOrBefore(market, today, holidays);
+  const cutoff = PUBLISH_CUTOFF[holidayKey(market)];
+  const here = nowInZone(cutoff.tz, now);
+  const ref = here.hour >= cutoff.hour ? here.date : previousDate(here.date);
   return latestTradingDayOnOrBefore(market, ref, holidays);
 }
 

@@ -1,0 +1,27 @@
+name: CI
+
+# Unit tests + build on every push/PR. The rollover suite here
+# (src/lib/monthTabs.test.js, scripts/lib/coverage.test.js) simulates the clock
+# on the first calendar day and first trading day of a new month, so the failure
+# of 2026-08-03 — the 8月 tab rendering disabled because no August data existed
+# yet — is caught here rather than by the calendar in production.
+on:
+  push:
+  pull_request:
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build

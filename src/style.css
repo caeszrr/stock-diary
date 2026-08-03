@@ -104,6 +104,13 @@ body {
   cursor: not-allowed;
 }
 
+/* The current month/year is always reachable — mark it so it reads as "today's
+   month, no data yet" rather than as just another tab. */
+.tab-btn.tab-current:not(.active) {
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
 .matrix-wrapper {
   flex: 1;
   overflow: auto;
@@ -114,6 +121,14 @@ body {
 .empty-state {
   padding: 2rem;
   color: var(--text-dim);
+}
+
+/* A valid-but-empty month: an explanation, not a blank screen. */
+.empty-month {
+  font-size: 1rem;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  line-height: 1.7;
 }
 
 table.matrix {
