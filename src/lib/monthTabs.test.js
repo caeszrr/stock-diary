@@ -44,10 +44,12 @@ describe('month tab enablement — calendar ∪ data', () => {
     expect(month(8).disabled).toBe(false);
   });
 
-  it('still disables future months, which cannot have data yet', () => {
+  // Superseded by the calendar-driven grid: a future month now renders its
+  // scheduled trading days blank rather than nothing, so there is no longer any
+  // reason to lock the user out of it. Every month of the current year opens.
+  it('enables every month of the current year, including future ones', () => {
     const { month } = renderInto(JULY_MANIFEST, '2026-08-03', '08');
-    expect(month(9).disabled).toBe(true);
-    expect(month(12).disabled).toBe(true);
+    for (let m = 1; m <= 12; m += 1) expect(month(m).disabled).toBe(false);
   });
 
   it('keeps months that DO have data clickable', () => {

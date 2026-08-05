@@ -239,17 +239,21 @@ function startV1() {
 
     bannerSlot.innerHTML = fallbackNoticeHtml() + freshnessBannerHtml() + renderBlankModeBanner(groups);
 
-    // A month with no session data at all is a normal state (the current month
-    // before its first close, a month the pipeline missed) — say so in zh-TW
-    // rather than rendering an empty grid that reads as a broken app.
+    // A month with no session data is a normal state (a future month, the
+    // current month before its first close, a month the pipeline missed). It
+    // used to replace the grid with a sentence — which meant a future month had
+    // no shape at all. Now the calendar grid always renders and the sentence
+    // becomes a caption above it, so the user gets both the explanation and the
+    // month's structure.
     const hasAnyData = Object.values(dataMap).some((byDate) => Object.keys(byDate).length > 0);
     if (!hasAnyData) {
       const msg = emptyMonthMessage(state.year, state.month, taipeiTodayIso());
-      matrixWrapper.innerHTML = `<p class="empty-state empty-month">${msg}</p>`;
-      return;
+      if (msg) bannerSlot.innerHTML += `<div class="freshness-banner banner-holiday">${msg}</div>`;
     }
 
     renderMatrix(matrixWrapper, {
+      year: state.year,
+      month: state.month,
       dataMap,
       pinnedDataMap,
       pinnedDates,

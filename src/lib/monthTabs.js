@@ -41,22 +41,23 @@ export function tabYears(manifest, todayIso) {
 /**
  * The clickable months for `year`, as a Set of "MM".
  *
- * Current year: every month from the first one we hold data for through the
- * current month — so the current month is reachable before its first session
- * lands, and a month the pipeline missed entirely still renders (empty) instead
- * of vanishing. Future months stay disabled; they cannot have data yet.
+ * Current year: ALL TWELVE, always. A future month is a perfectly meaningful
+ * thing to open now that the grid is rendered from the calendar — it shows the
+ * month's scheduled trading days, blank and dimmed, and answers "when does the
+ * market next trade?" A disabled tab answers nothing, and the whole class of
+ * month-rollover bugs lived in the gap between "has data" and "is reachable".
  *
- * Past years: the interior of the data range is filled in for the same reason.
+ * Past years: the interior of the data range is filled in, so a month the
+ * pipeline missed entirely still renders (empty) instead of vanishing.
  */
 export function enabledMonths(manifest, year, todayIso) {
   const data = new Set((manifest.monthsByYear || {})[year] || []);
   const enabled = new Set(data);
-  const [curYear, curMonth] = [todayIso.slice(0, 4), todayIso.slice(5, 7)];
+  const curYear = todayIso.slice(0, 4);
   const nums = [...data].map(Number);
 
   if (year === curYear) {
-    const first = nums.length ? Math.min(...nums) : Number(curMonth);
-    for (let m = first; m <= Number(curMonth); m += 1) enabled.add(mm(m));
+    for (let m = 1; m <= 12; m += 1) enabled.add(mm(m));
   } else if (nums.length) {
     for (let m = Math.min(...nums); m <= Math.max(...nums); m += 1) enabled.add(mm(m));
   }
