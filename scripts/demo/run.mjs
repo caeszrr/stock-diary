@@ -26,10 +26,27 @@ function check(label, ok, detail) {
   if (!ok) failures += 1;
 }
 
+/**
+ * A scratch copy of the real config + data.
+ *
+ * The watchlist is trimmed to a few tickers per market. Every rule under test
+ * is decided per SESSION, not per symbol, so the outcome is identical — but the
+ * outage scenario re-requests each missing symbol with retry backoff, and at
+ * the full 67 上市 symbols that alone takes ~6 minutes per scenario. Trimming
+ * keeps the demo runnable in seconds; scripts/lib/*.test.js cover the same
+ * logic exhaustively.
+ */
 function scratch() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'sd-demo-'));
   fs.cpSync(path.join(REPO, 'config'), path.join(dir, 'config'), { recursive: true });
   fs.cpSync(path.join(REPO, 'public', 'data'), path.join(dir, 'public', 'data'), { recursive: true });
+
+  const tickersPath = path.join(dir, 'config', 'tickers.json');
+  const tickers = JSON.parse(fs.readFileSync(tickersPath, 'utf8'));
+  const list = Array.isArray(tickers) ? tickers : tickers.tickers;
+  const keep = ['2330', '2317', '3163', 'TAIEX', 'NVDA'];
+  const trimmed = list.filter((t) => keep.includes(t.symbol));
+  fs.writeFileSync(tickersPath, JSON.stringify(Array.isArray(tickers) ? trimmed : { ...tickers, tickers: trimmed }, null, 2));
   return dir;
 }
 
