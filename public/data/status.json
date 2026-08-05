@@ -174,7 +174,8 @@
         "indices": "4/4",
         "calendarExpected": "2026-08-05"
       },
-      "lastSuccessfulWrite": "2026-08-05T09:28:37.309Z"
+      "lastSuccessfulWrite": "2026-08-05T09:28:37.309Z",
+      "health": "healthy"
     }
   }
 }
