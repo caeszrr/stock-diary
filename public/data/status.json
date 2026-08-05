@@ -1,27 +1,28 @@
 {
   "tw": {
-    "lastRun": "2026-08-03T16:14:25.086Z",
+    "lastRun": "2026-08-05T15:51:06.851Z",
     "latestSessionDate": "2026-08-03",
     "watchlistCount": 67,
-    "fullMarketCount": 1373,
+    "fullMarketCount": 1377,
     "ok": true,
     "complete": true
   },
   "tpex": {
-    "lastRun": "2026-08-03T16:14:28.095Z",
+    "lastRun": "2026-08-05T15:51:15.972Z",
     "latestSessionDate": "2026-08-03",
     "watchlistCount": 13,
-    "fullMarketCount": 10199,
+    "fullMarketCount": 10252,
     "ok": true,
     "complete": true
   },
   "us": {
-    "lastRun": "2026-08-02T07:52:18.857Z",
-    "latestSessionDate": "2026-07-31",
-    "watchlistCount": 100,
-    "indexCount": 20,
+    "lastRun": "2026-08-05T09:28:37.310Z",
+    "latestSessionDate": "2026-08-04",
+    "watchlistCount": 20,
+    "indexCount": 4,
     "failures": [],
-    "ok": true
+    "ok": true,
+    "complete": true
   },
   "backfill": {
     "lastRun": "2026-07-26T14:43:23.132Z",
@@ -57,11 +58,11 @@
       "stale": false,
       "complete": true,
       "fullMarket": {
-        "count": 1373,
-        "snapshotDate": "2026-07-31",
+        "count": 1377,
+        "snapshotDate": "2026-08-04",
         "taiex": true
       },
-      "lastSuccessfulWrite": "2026-08-03T16:14:25.084Z",
+      "lastSuccessfulWrite": "2026-08-05T15:51:06.851Z",
       "health": "healthy"
     },
     "tpex": {
@@ -73,21 +74,25 @@
       "stale": false,
       "complete": true,
       "fullMarket": {
-        "count": 10199,
-        "snapshotDate": "2026-08-03"
+        "count": 10252,
+        "snapshotDate": "2026-08-05"
       },
-      "lastSuccessfulWrite": "2026-08-03T16:14:28.093Z",
+      "lastSuccessfulWrite": "2026-08-05T15:51:15.972Z",
       "health": "healthy"
     },
     "us": {
-      "sessionDate": "2026-07-31",
+      "sessionDate": "2026-08-04",
       "expectedCount": 20,
       "actualCount": 20,
       "missingCodes": [],
       "resolved": {},
-      "stale": false,
+      "stale": true,
       "complete": true,
-      "lastSuccessfulWrite": "2026-08-03T17:30:34.973Z",
+      "fullMarket": {
+        "indices": "4/4",
+        "calendarExpected": "2026-08-05"
+      },
+      "lastSuccessfulWrite": "2026-08-05T09:28:37.309Z",
       "health": "healthy"
     },
     "idxTw": {
