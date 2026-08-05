@@ -16,12 +16,13 @@
     "complete": false
   },
   "us": {
-    "lastRun": "2026-08-02T07:52:18.857Z",
-    "latestSessionDate": "2026-07-31",
-    "watchlistCount": 100,
-    "indexCount": 20,
+    "lastRun": "2026-08-05T08:05:29.256Z",
+    "latestSessionDate": "2026-08-04",
+    "watchlistCount": 20,
+    "indexCount": 4,
     "failures": [],
-    "ok": true
+    "ok": true,
+    "complete": true
   },
   "backfill": {
     "lastRun": "2026-07-26T14:43:23.132Z",
@@ -162,15 +163,18 @@
       "health": "resolved-empty"
     },
     "us": {
-      "sessionDate": "2026-08-03",
+      "sessionDate": "2026-08-04",
       "expectedCount": 20,
       "actualCount": 20,
       "missingCodes": [],
       "resolved": {},
-      "stale": false,
+      "stale": true,
       "complete": true,
-      "lastSuccessfulWrite": "2026-08-04T16:03:22.351Z",
-      "health": "healthy"
+      "fullMarket": {
+        "indices": "4/4",
+        "calendarExpected": "2026-08-05"
+      },
+      "lastSuccessfulWrite": "2026-08-05T08:05:29.255Z"
     }
   }
 }
