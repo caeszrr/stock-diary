@@ -44,6 +44,34 @@ green). These are non-negotiable:
   `config/market-holidays.json` `twDiscovered`), and US market holidays are
   expected silence. Only judge sessions that should already be published
   (before the market's current day, or one the fetch already recorded).
+- **A verdict that explains away missing data must be backed by positive
+  evidence and remain falsifiable. When evidence is absent, report staleness
+  loudly rather than inventing an explanation.** Born from 2026-08-04/05, when
+  the watchdog turned its own fetch failure into two "discovered holidays",
+  which then removed those days from the expected calendar and made every later
+  run report green while two live trading days were missing. Concretely:
+  - **"Market closed" is never the default explanation for missing data.**
+    Absence because *our* fetch failed is an outage and must be loud. A closure
+    requires positive evidence: TWSE's published schedule, or **both** TWSE and
+    TPEx answering a **by-date** query healthily with no session.
+  - **Never record a closure for a session whose market has not yet closed on
+    its own wall clock**, no matter what any coverage record claims. A real
+    holiday and a day that has not happened yet produce byte-identical
+    "no data" answers; only the clock separates them.
+  - **Prefer by-date endpoints over undated "latest snapshot" ones.** An
+    undated source cannot be told apart from a stale one — `STOCK_DAY_ALL` and
+    `FMTQIK` served the previous session for a full day during the incident,
+    HTTP 200 throughout.
+  - **Data on disk outranks a verdict about that date.** Any store holding a
+    record for a date marked closed auto-revokes the closure.
+  - **Verdicts expire.** Anything not backed by full dual-exchange evidence
+    must re-prove itself, and stays out of the rendered calendar until it does.
+  - **Two consecutive unexplained sessions escalate**, even when every symbol
+    carries a verdict. "Everything is resolved" is precisely what the system
+    reported throughout the incident.
+  - **On screen, 休 means confirmed closed.** An unexplained gap renders
+    資料延遲中; a session not yet owed renders silently. All three are
+    different facts and must never share a glyph.
 - **A confirmed no-trade is a verdict, not a failure.** If a targeted re-fetch
   confirms the exchange has no record (zero volume/suspension/halt), mark it
   `no_trade`/`suspended`/`market_closed` and stop retrying — a legitimate empty

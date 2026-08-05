@@ -383,6 +383,109 @@ production.
 > file failed to *start* while the suite still printed "24 passed" — a test
 > that cannot start is not a test.
 
+## The false-休 incident (2026-08-04/05) and the rules it produced
+
+The most dangerous failure this project has had: **the system invented an
+explanation for its own outage, wrote it into the calendar, and then reported
+all-green for two days while real users in Taipei watched the market trade.**
+
+### What happened
+
+1. **GitHub delivered the crons hours late.** The TW fetch is scheduled for
+   07:10/08:10 UTC; on 8/3 and 8/4 it actually ran at 16:09 and 16:22 UTC —
+   past Taipei midnight. Both runs computed "today's session" from the wall
+   clock at run time, so they demanded a session that had not traded yet
+   (2026-08-04, then 2026-08-05) and found all 67 上市 symbols "missing".
+2. **The watchdog explained the absence.** Its whole-market-absent heuristic
+   asked TWSE's per-symbol history for each symbol, got healthy responses with
+   no row for that date, and concluded the exchange had been closed. It wrote
+   `2026-08-04` and then `2026-08-05` into `twDiscovered` — each one *before*
+   that day's market had opened.
+3. **The verdict poisoned everything downstream.** A "holiday" is excluded from
+   the expected calendar, so every later run re-anchored to 2026-08-03, found
+   it complete, and reported `ok: true, complete: true, health: healthy`. The
+   freshness banner said 資料為最新. The coverage stamps said 上市 8/3 67/67 —
+   accurate answers to the wrong question. On screen, every 上市 and TAIEX cell
+   for two live trading days rendered **休**.
+4. **Meanwhile a real outage was underneath it.** TWSE's `STOCK_DAY_ALL` and
+   `FMTQIK` (both on `openapi.twse.com.tw`) are **undated** — they serve "the
+   latest snapshot". On 8/5 they served 8/4 all evening, HTTP 200 throughout.
+   The dated `www.twse.com.tw/rwd` endpoints had 8/5 the whole time. The false
+   closure is what stopped anyone from asking them.
+
+Ground truth, re-checked from TWSE directly: 8/5 traded normally, TAIEX closed
+**44,611.60 (+1,250.94, +2.88%)**, and 44,611.60 − 1,250.94 = 43,360.66 —
+exactly the 8/4 close already in our store. `2026-07-10` in the same list is a
+*genuine* closure (TWSE's own history skips it) and was kept.
+
+Two independent faults made it silent:
+
+- **The escalation channel had never worked.** `watchdog.yml` read its run
+  report from `./public/data/watchdog-report.json`, which `watchdog.js` has
+  never written (it goes to the repo root, deliberately undeployed).
+  `require()` threw, `|| true` swallowed it, and the step exited without
+  filing anything. No watchdog gap could ever have opened an Issue.
+- **The synthetic check was not on `main`.** It existed only on an unmerged
+  branch, so the one monitor designed to assert what a human sees never ran
+  against production.
+
+### The rules that came out of it
+
+Now in CLAUDE.md as standing rules, enforced by `scripts/lib/closureEvidence.js`
+— the only place a closure may be born or die:
+
+| Rule | Enforcement |
+|---|---|
+| A closure needs **positive evidence**: the official schedule, or **both** exchanges answering a by-date query healthily with no session | `confirmTwClosure()` |
+| **Never** record a closure for a session whose market has not closed on its own wall clock | `publishCutoffPassed()`, checked first and independent of all derived state |
+| Outages are not closures — timeouts, non-200s, throttles, unparseable bodies, stale snapshots | probe returns `traded: null` → refused |
+| **Contradiction auto-revoke**: any store holding data for a "closed" date revokes it | `contradictedClosures()` |
+| Verdicts are **falsifiable** and expire; anything without dual-exchange evidence must re-prove itself | `reviewClosures()`, run by every fetch |
+| **Two consecutive** unexplained sessions escalate, even if every symbol has a verdict | watchdog streak check → exit 1 → Issue |
+| 休 only for confirmed closures; unexplained → 資料延遲中; not yet owed → silent | `cell.js` `blankStateHtml()` |
+| The banner may say 資料為最新 only if the **calendar-expected** session is complete | `main.js` `freshnessBannerHtml()` |
+
+The wall-clock rule is not redundant with the evidence rule, and this is the
+subtle part: asked about a genuine holiday (7/10) **and** about a day that has
+not happened yet (8/6), both exchanges answer "no data" in exactly the same
+shape. Emptiness alone proves nothing. Only the clock separates "did not trade"
+from "has not traded yet".
+
+Costs nothing when healthy: the falsifiability pass makes **zero network calls**
+while every verdict on file is sound.
+
+### Demonstrations
+
+`node scripts/demo/run.mjs` runs the real `scripts/watchdog.js` against a
+scratch copy of `config/` + `public/data/` with a simulated network
+(`scripts/demo/net-sim.cjs` patches global `fetch` via `--require`, so no
+production code carries a test hook):
+
+1. **Simulated outage across two sessions** → no closure recorded, gaps stay
+   `unresolved`, escalation fires at the two-session threshold, exit 1.
+2. **Simulated genuine closure** (both exchanges healthy-but-empty) → closure
+   confirmed *with its evidence recorded*, and the date enters the rendered
+   calendar so the UI may show 休.
+3. **Contradiction auto-revoke** — a closure is planted on a date the stores
+   hold data for, carrying full evidence, and is revoked anyway.
+
+### The full-month calendar grid
+
+The grid used to derive its columns from whatever dates appeared in the data,
+which made the layout a mirror of the pipeline's mood — a month with no
+successful run rendered no columns at all, and a missing session left no gap to
+notice, because the grid was drawn around the hole.
+
+It is now **rendered from the calendar and filled from the data**: every
+scheduled trading day of the month is a column, past and future. A new month is
+just numbers filling into a layout that already exists, which removes the UI
+half of the month-rollover failure class rather than patching another instance
+of it. Columns are the union of both markets' trading days (so a US session on
+a Taiwan holiday is a real column, with 休 on the TW rows); weekends never
+appear; all 12 month tabs of the current year are always clickable; and
+auto-scroll lands on the newest column that actually holds data, so a phone
+never opens on a wall of blank future columns.
+
 ## Future work (Phase 8 — skipped)
 
 The spec's optional Phase 8 (a Cloudflare Worker queue making US stock
