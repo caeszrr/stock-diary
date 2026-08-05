@@ -1,0 +1,136 @@
+name: Synthetic site check
+
+# Loads the DEPLOYED site headlessly and asserts what a human actually sees.
+#
+# The data watchdog checks completeness of the JSON and nothing else, so on
+# 2026-08-03 it reported green while the user could not reach August at all —
+# the 8月 tab rendered disabled because the month list was built from data
+# alone. No amount of data monitoring can catch that. This one opens the page.
+#
+# Green = completely silent: no Issue, no comment, no commit, no email. It never
+# writes to the repo, so it can never churn a data commit.
+
+on:
+  schedule:
+    # After the TW fetch window (07:10/08:10 UTC) — 10:30 UTC = 18:30 Taipei.
+    - cron: '37 10 * * 1-5'
+    # After the US fetch window (22:30/23:30 UTC). Those run Tue-Sat UTC, so
+    # +1.5h lands on Wed-Sun = 3,4,5,6,0. Must be written '3-6,0'; a wrapping
+    # range like '3-0' is invalid cron and makes GitHub reject the whole file.
+    - cron: '3 1 * * 3-6,0'
+    # Once daily regardless of market — catches a site that broke with no fetch.
+    - cron: '23 13 * * *'
+  workflow_dispatch:
+    inputs:
+      use_branch_build:
+        description: 'Check THIS branch built and served locally, instead of the live site'
+        type: boolean
+        default: false
+      site_url:
+        description: 'Override the site URL to check (blank = live site)'
+        type: string
+        required: false
+      grace_hours:
+        description: 'Hours after a session publishes before its absence fails'
+        type: string
+        required: false
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: synthetic-check
+  cancel-in-progress: false
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+
+      # Optional: check this branch's own build instead of the live site, so a
+      # change can be verified BEFORE it is merged and deployed (and so this
+      # check's own escalation path can be exercised without touching main).
+      - name: Build and serve this branch
+        if: inputs.use_branch_build
+        run: |
+          npm run build
+          npx vite preview --port 4173 &
+          for i in $(seq 1 30); do
+            curl -sf -o /dev/null http://localhost:4173/stock-diary/ && exit 0
+            sleep 1
+          done
+          echo "preview server did not come up"; exit 1
+
+      # continue-on-error so the screenshots still upload and the escalation
+      # step below can name the failed assertions.
+      - name: Run synthetic check
+        id: synthetic
+        continue-on-error: true
+        env:
+          SITE_URL: ${{ inputs.site_url || (inputs.use_branch_build && 'http://localhost:4173/stock-diary/') || 'https://caeszrr.github.io/stock-diary/' }}
+          SYNTHETIC_GRACE_HOURS: ${{ inputs.grace_hours || '6' }}
+        run: npm run synthetic
+
+      - name: Upload screenshots + report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: synthetic-${{ github.run_id }}
+          path: synthetic-artifacts/
+          retention-days: 30
+
+      # One issue, reused forever: a stable title means a persistent failure gets
+      # a comment rather than a new issue every run. GitHub emails the owner on
+      # both. Nothing runs here when the check passed.
+      - name: Escalate failed assertions
+        if: steps.synthetic.outcome == 'failure'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          TITLE="網站異常：使用者看到的畫面檢查未通過"
+          node -e '
+            const fs = require("fs");
+            let r;
+            try { r = JSON.parse(fs.readFileSync("synthetic-artifacts/synthetic-report.json", "utf8")); }
+            catch { r = { failures: [{ name: "合成檢查未產生報告", detail: "檢查程序在寫出報告前就中止了，請看 Actions log。" }] }; }
+            const fails = (r.failures || []).filter((f) => f && f.name);
+            const lines = fails.length
+              ? fails.map((f) => `- **${f.name}**${f.detail ? `\n  - ${f.detail}` : ""}`).join("\n")
+              : "- （報告中沒有具名的失敗項目，請看 Actions log）";
+            const body = [
+              `網站：${r.siteUrl || "(未知)"}`,
+              `檢查時間：${r.checkedAt || "(未知)"}`,
+              r.targets ? `應顯示的最新交易日：${r.targets.latest}（寬限 ${r.graceHours} 小時後至少要有 ${r.targets.required}）` : null,
+              "",
+              "### 未通過的檢查項目",
+              lines,
+              "",
+              `螢幕截圖（desktop + mobile）在這次執行的 artifact 裡：${process.env.RUN_URL}`,
+              "",
+              "此檢查會實際打開已部署的網站，斷言使用者眼睛看到的東西（本月分頁是否存在／可點擊／預設選取、2330 與 TAIEX 是否有最新交易日的數字、Service Worker 是否為最新版、有無 console 錯誤）。資料完整性監控看不到這一類故障。",
+              "（GitHub 會將此 Issue 以 email 通知維護者。）",
+            ].filter((l) => l !== null).join("\n");
+            fs.writeFileSync("issue-body.md", body);
+          '
+          existing=$(gh issue list --state open --search "in:title \"$TITLE\"" --json number,title \
+            --jq "map(select(.title == \"$TITLE\")) | .[0].number // empty")
+          if [ -n "$existing" ]; then
+            printf '%s\n\n（仍未恢復，於 %s 再次檢查）\n' "$(cat issue-body.md)" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" \
+              | gh issue comment "$existing" --body-file -
+            echo "::warning::Synthetic check failed — commented on existing issue #$existing"
+          else
+            gh issue create --title "$TITLE" --body-file issue-body.md --label "site-down" 2>/dev/null \
+              || gh issue create --title "$TITLE" --body-file issue-body.md
+            echo "::warning::Synthetic check failed — opened a new issue"
+          fi
+          exit 1

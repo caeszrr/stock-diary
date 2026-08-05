@@ -8,8 +8,8 @@ name: Refresh market holiday calendar
 
 on:
   schedule:
-    - cron: '0 2 2 1 *'   # Jan 2, 02:00 UTC — after TWSE publishes the new year
-    - cron: '0 3 1 * *'   # 1st of each month — safety refresh
+    - cron: '21 2 2 1 *'   # Jan 2, 02:21 UTC — after TWSE publishes the new year
+    - cron: '31 3 1 * *'   # 1st of each month, 03:31 UTC — safety refresh
   workflow_dispatch: {}
 
 permissions:

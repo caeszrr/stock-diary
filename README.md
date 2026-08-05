@@ -8,7 +8,10 @@ layer, add-stock + start modes, GitHub Actions + Pages deploy, PWA + mobile
 polish, and this docs/handoff pass. A later hardening pass added **completeness
 monitoring**: the pipeline verifies every session is complete (not merely
 present), self-heals gaps, and a watchdog escalates only what it can't fix —
-see "Self-monitoring: coverage records + watchdog" below.
+see "Self-monitoring: coverage records + watchdog" below. After the first month
+rollover (2026-08-03) broke the 8月 tab while that watchdog stayed green, a
+**synthetic check** was added that opens the deployed site and asserts what a
+human sees — see "Synthetic site check" below.
 
 **Live site**: https://caeszrr.github.io/stock-diary/
 **Repo**: https://github.com/caeszrr/stock-diary
@@ -240,6 +243,248 @@ is detected instead of being silently accepted (this was added after a
   (tick *sweep* to re-check the last 14 sessions), or for a specific
   symbol/date use **Backfill historical data** with `symbols` set. Locally:
   `npm run watchdog:sweep`, or `BACKFILL_SYMBOLS=2330 npm run backfill`.
+
+## Synthetic site check: monitoring what a human actually sees
+
+Added after **2026-08-03, the app's first ever month rollover**, when the 8月
+tab rendered greyed out and unclickable for the whole evening while the data
+watchdog reported green. That combination is the point: *completeness
+monitoring is structurally unable to see a rendering failure.* The watchdog
+checks the JSON on disk; nobody was checking the page.
+
+### What actually happened (three separate faults)
+
+1. **The pipeline never ran that day.** GitHub delivered the 07:10 UTC TW cron
+   at **16:09 UTC — about 9 hours late**. This is not a one-off: this repo's
+   scheduled workflows have been running hours behind for weeks (the US
+   22:30 UTC cron has been landing ~07:40 UTC the next morning). 2026-08-03 was
+   simply the day the drift pushed a TW run past **Taipei midnight**, by which
+   time TWSE's bulk `STOCK_DAY_ALL` snapshot had rolled over, so 上市 and TAIEX
+   missed the session entirely. **Cron delivery time is not something this repo
+   controls, so nothing here should assume it.**
+2. **The UI treated "no data yet" as "this month does not exist."** The month
+   tab list was built from `manifest.json` alone, which `regenerateManifest()`
+   produces by scanning `public/data/` — data, never calendar. So a month
+   before its first successful run had no entry and the tab was hard-disabled,
+   and `main.js` silently fell back to July.
+3. **`expectedSessionDate()` assumed a run lands before local midnight.** The
+   late run therefore demanded a 2026-08-04 session that had not traded and
+   declared all 67 上市 + 13 上櫃 symbols missing — a false alarm primed to
+   become a watchdog Issue.
+
+### The rules that came out of it
+
+- **Month list = calendar ∪ data, never data alone** (`src/lib/monthTabs.js`).
+  The **current month and current year are always clickable**, data or not. A
+  month the pipeline missed entirely still renders rather than vanishing;
+  future months stay disabled because they cannot have data.
+- **A valid-but-empty month is a normal state with an explanation**, not a
+  blank grid: 本月尚無資料，今日收盤後更新 / 本月尚未開始交易 / 週末休市，本月尚無資料.
+- **The default view is the current Taipei month, always.** The one case that
+  can still degrade — a manifest that failed to load — says so on screen
+  instead of silently showing an older month.
+- **Session expectation comes from the market's own clock**, via a publish
+  cutoff (15:00 Taipei / 17:00 New York) rather than "today or earlier". A late
+  run still judges the session it was meant to judge. This also fixed the US
+  expectation on the watchdog's 00:00/01:30 UTC passes, which were reading the
+  rolled-over UTC date as a US session.
+
+### Making the pipeline independent of when GitHub runs it
+
+The grace window above stops the *false alarm*, but it does nothing about the
+*missed session* — and the missed session was the actual damage. So the fetch
+scripts no longer ask "what is today's session?" at all.
+
+Every fetch run now sweeps the **last 3 trading sessions** and repairs any that
+is missing or incomplete (`scripts/lib/recentSweep.js`), the same posture the
+watchdog's daily sweep already took. A run that fires on time, six hours late,
+or not until the next morning all reach the same result, because the answer no
+longer depends on the clock — only on what is actually on disk versus what the
+calendar says should be. Three sessions covers a long weekend plus one dead
+run; the deep 14-session sweep stays with the watchdog.
+
+Cost on a healthy day is **zero network calls** — the scan reads month files and
+finds nothing missing. Traffic happens only where there is a real gap, and
+symbols already carrying a verdict (`no_trade`/`suspended`/`market_closed`/
+`no_history`) are skipped, so a legitimately empty cell never becomes permanent
+retry traffic.
+
+The sweep, the group definitions, and the verdict logic are shared with the
+watchdog (`scripts/lib/sessionSweep.js`, `scripts/lib/marketGroups.js`) rather
+than duplicated. That refactor is what closes **issue #3**: the group table used
+to live inside `watchdog.js` with no `idx` entry, so index gaps — TAIEX above
+all — could never self-heal. TAIEX and the US indices are now monitored on their
+own calendars (split deliberately: one combined `idx` group would mark every US
+index missing on a Taiwan holiday).
+
+It also closes **issue #2**. Persisting the coverage record used to sit behind an
+early `continue` that skipped already-complete sessions, so a market that was
+healthy all along never got a record and the UI rendered it as `—` —
+indistinguishable from "never checked". `us`, `idxTw` and `idxUs` now carry
+records like everything else. That is the mirror image of "presence is not
+completeness": **absence of a record must not be the only evidence of health.**
+
+Cron minutes were also moved off round numbers (`:13`, `:27`, `:43`, `:53`…).
+GitHub's scheduler is most congested at `:00`, and this measurably reduces queue
+delay — but be clear about proportions: the observed drift was **6–9 hours**, and
+minute-jitter does not touch that magnitude. The sweep is what actually fixes
+this; the jitter is a cheap extra.
+
+### The check itself
+
+`scripts/synthetic-check.js` (`npm run synthetic`,
+`.github/workflows/synthetic-check.yml`) opens the **deployed** site headlessly
+at 1400×900 and 390×844 and asserts:
+
+- the current month tab exists, is **enabled**, and is **selected by default**;
+  the current year tab exists and is enabled
+- **2330** and **TAIEX** show a real close for the latest expected trading
+  session
+- the service worker has taken control and the page is running the build that
+  is actually deployed (`window.__STOCK_DIARY_BUILD__` vs a cache-busted
+  `version.json`) — not a frozen copy
+- **zero console errors**, via both `page.on('console')` and
+  `page.on('pageerror')`
+
+Scheduled after each market's update window plus once daily. **Green does
+nothing at all** — no Issue, no comment, no commit, no email; the job has
+`contents: read` only, so it cannot churn a data commit. On failure it opens
+**one** issue (`網站異常：使用者看到的畫面檢查未通過`, label `site-down`) and
+*comments* on it thereafter rather than duplicating, naming the failed
+assertions and linking the screenshot artifact.
+
+Two deliberate trade-offs worth knowing:
+
+- **Freshness has a grace window** (`SYNTHETIC_GRACE_HOURS`, default 6). Given
+  the cron drift above, demanding the newest session the instant its publish
+  cutoff passes would alarm on a merely-late-but-working pipeline. Beyond the
+  grace window, a missing session is a real failure. Lower it if the drift ever
+  goes away.
+- **A recovered check does not close its issue.** "Silent when green" was an
+  explicit requirement, and closing an issue emails you too. The cost is that a
+  resolved issue stays open until closed by hand — the same convention the data
+  watchdog already follows.
+
+`workflow_dispatch` takes **`use_branch_build`**, which builds and serves the
+checked-out branch locally and checks that instead of the live site — so a
+change can be verified *before* it is merged.
+
+### Rollover is covered by CI now
+
+`.github/workflows/ci.yml` runs `npm test` + `npm run build` on every push/PR.
+`src/lib/monthTabs.test.js` and `scripts/lib/coverage.test.js` **simulate the
+clock** on the first calendar day and the first trading day of a new month
+(including a Saturday 1st, a year rollover, consecutive holidays, and a run
+delivered after Taipei midnight), so 2026-09-01 is verified here rather than in
+production.
+
+> `jsdom` is pinned to `^26` deliberately: `jsdom@30` requires Node 22, and
+> this project targets Node 20 everywhere. Under Node 20 the entire DOM test
+> file failed to *start* while the suite still printed "24 passed" — a test
+> that cannot start is not a test.
+
+## The false-休 incident (2026-08-04/05) and the rules it produced
+
+The most dangerous failure this project has had: **the system invented an
+explanation for its own outage, wrote it into the calendar, and then reported
+all-green for two days while real users in Taipei watched the market trade.**
+
+### What happened
+
+1. **GitHub delivered the crons hours late.** The TW fetch is scheduled for
+   07:10/08:10 UTC; on 8/3 and 8/4 it actually ran at 16:09 and 16:22 UTC —
+   past Taipei midnight. Both runs computed "today's session" from the wall
+   clock at run time, so they demanded a session that had not traded yet
+   (2026-08-04, then 2026-08-05) and found all 67 上市 symbols "missing".
+2. **The watchdog explained the absence.** Its whole-market-absent heuristic
+   asked TWSE's per-symbol history for each symbol, got healthy responses with
+   no row for that date, and concluded the exchange had been closed. It wrote
+   `2026-08-04` and then `2026-08-05` into `twDiscovered` — each one *before*
+   that day's market had opened.
+3. **The verdict poisoned everything downstream.** A "holiday" is excluded from
+   the expected calendar, so every later run re-anchored to 2026-08-03, found
+   it complete, and reported `ok: true, complete: true, health: healthy`. The
+   freshness banner said 資料為最新. The coverage stamps said 上市 8/3 67/67 —
+   accurate answers to the wrong question. On screen, every 上市 and TAIEX cell
+   for two live trading days rendered **休**.
+4. **Meanwhile a real outage was underneath it.** TWSE's `STOCK_DAY_ALL` and
+   `FMTQIK` (both on `openapi.twse.com.tw`) are **undated** — they serve "the
+   latest snapshot". On 8/5 they served 8/4 all evening, HTTP 200 throughout.
+   The dated `www.twse.com.tw/rwd` endpoints had 8/5 the whole time. The false
+   closure is what stopped anyone from asking them.
+
+Ground truth, re-checked from TWSE directly: 8/5 traded normally, TAIEX closed
+**44,611.60 (+1,250.94, +2.88%)**, and 44,611.60 − 1,250.94 = 43,360.66 —
+exactly the 8/4 close already in our store. `2026-07-10` in the same list is a
+*genuine* closure (TWSE's own history skips it) and was kept.
+
+Two independent faults made it silent:
+
+- **The escalation channel had never worked.** `watchdog.yml` read its run
+  report from `./public/data/watchdog-report.json`, which `watchdog.js` has
+  never written (it goes to the repo root, deliberately undeployed).
+  `require()` threw, `|| true` swallowed it, and the step exited without
+  filing anything. No watchdog gap could ever have opened an Issue.
+- **The synthetic check was not on `main`.** It existed only on an unmerged
+  branch, so the one monitor designed to assert what a human sees never ran
+  against production.
+
+### The rules that came out of it
+
+Now in CLAUDE.md as standing rules, enforced by `scripts/lib/closureEvidence.js`
+— the only place a closure may be born or die:
+
+| Rule | Enforcement |
+|---|---|
+| A closure needs **positive evidence**: the official schedule, or **both** exchanges answering a by-date query healthily with no session | `confirmTwClosure()` |
+| **Never** record a closure for a session whose market has not closed on its own wall clock | `publishCutoffPassed()`, checked first and independent of all derived state |
+| Outages are not closures — timeouts, non-200s, throttles, unparseable bodies, stale snapshots | probe returns `traded: null` → refused |
+| **Contradiction auto-revoke**: any store holding data for a "closed" date revokes it | `contradictedClosures()` |
+| Verdicts are **falsifiable** and expire; anything without dual-exchange evidence must re-prove itself | `reviewClosures()`, run by every fetch |
+| **Two consecutive** unexplained sessions escalate, even if every symbol has a verdict | watchdog streak check → exit 1 → Issue |
+| 休 only for confirmed closures; unexplained → 資料延遲中; not yet owed → silent | `cell.js` `blankStateHtml()` |
+| The banner may say 資料為最新 only if the **calendar-expected** session is complete | `main.js` `freshnessBannerHtml()` |
+
+The wall-clock rule is not redundant with the evidence rule, and this is the
+subtle part: asked about a genuine holiday (7/10) **and** about a day that has
+not happened yet (8/6), both exchanges answer "no data" in exactly the same
+shape. Emptiness alone proves nothing. Only the clock separates "did not trade"
+from "has not traded yet".
+
+Costs nothing when healthy: the falsifiability pass makes **zero network calls**
+while every verdict on file is sound.
+
+### Demonstrations
+
+`node scripts/demo/run.mjs` runs the real `scripts/watchdog.js` against a
+scratch copy of `config/` + `public/data/` with a simulated network
+(`scripts/demo/net-sim.cjs` patches global `fetch` via `--require`, so no
+production code carries a test hook):
+
+1. **Simulated outage across two sessions** → no closure recorded, gaps stay
+   `unresolved`, escalation fires at the two-session threshold, exit 1.
+2. **Simulated genuine closure** (both exchanges healthy-but-empty) → closure
+   confirmed *with its evidence recorded*, and the date enters the rendered
+   calendar so the UI may show 休.
+3. **Contradiction auto-revoke** — a closure is planted on a date the stores
+   hold data for, carrying full evidence, and is revoked anyway.
+
+### The full-month calendar grid
+
+The grid used to derive its columns from whatever dates appeared in the data,
+which made the layout a mirror of the pipeline's mood — a month with no
+successful run rendered no columns at all, and a missing session left no gap to
+notice, because the grid was drawn around the hole.
+
+It is now **rendered from the calendar and filled from the data**: every
+scheduled trading day of the month is a column, past and future. A new month is
+just numbers filling into a layout that already exists, which removes the UI
+half of the month-rollover failure class rather than patching another instance
+of it. Columns are the union of both markets' trading days (so a US session on
+a Taiwan holiday is a real column, with 休 on the TW rows); weekends never
+appear; all 12 month tabs of the current year are always clickable; and
+auto-scroll lands on the newest column that actually holds data, so a phone
+never opens on a wall of blank future columns.
 
 ## Future work (Phase 8 — skipped)
 

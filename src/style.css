@@ -8,6 +8,7 @@
   --up: #d0342c; /* red = up, Taiwan convention */
   --down: #1a7a3c; /* green = down, Taiwan convention */
   --accent: #6b3fa0;
+  --future-cell: #fbfafc; /* future trading days in the month grid — present but recessive */
   --sans: system-ui, 'Segoe UI', 'Noto Sans TC', Roboto, sans-serif;
   color-scheme: light dark;
 }
@@ -22,6 +23,7 @@
     --sticky-bg: #201d26;
     --up: #ff6b61;
     --down: #4fd97a;
+    --future-cell: #1b1922;
   }
 }
 
@@ -104,6 +106,13 @@ body {
   cursor: not-allowed;
 }
 
+/* The current month/year is always reachable — mark it so it reads as "today's
+   month, no data yet" rather than as just another tab. */
+.tab-btn.tab-current:not(.active) {
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
 .matrix-wrapper {
   flex: 1;
   overflow: auto;
@@ -114,6 +123,14 @@ body {
 .empty-state {
   padding: 2rem;
   color: var(--text-dim);
+}
+
+/* A valid-but-empty month: an explanation, not a blank screen. */
+.empty-month {
+  font-size: 1rem;
+  text-align: center;
+  padding: 3rem 1.5rem;
+  line-height: 1.7;
 }
 
 table.matrix {
@@ -930,6 +947,11 @@ td.pin-separator {
 .cell-empty.cell-holiday { color: var(--text-dim); }
 .cell-empty.cell-notrade { color: var(--text-dim); font-weight: 600; }
 .cell-empty.cell-pending { color: var(--status-warn); opacity: 0.9; letter-spacing: 1px; }
+/* A future trading day in the pre-rendered grid: present, dimmed, and silent —
+   it must not read as missing data, so it carries no glyph at all. */
+.cell-empty.cell-future { background: var(--future-cell); }
+th.date-col-future { opacity: 0.45; }
+th.date-col-future .pin-btn { opacity: 0.6; }
 
 /* Freshness banner */
 .freshness-banner {

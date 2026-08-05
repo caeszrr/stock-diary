@@ -7,6 +7,11 @@
 const RUNNING_BUILD_ID = typeof __BUILD_ID__ !== 'undefined' ? __BUILD_ID__ : 'dev';
 const base = import.meta.env.BASE_URL;
 
+// Exposed so the synthetic check (scripts/synthetic-check.js) — and anyone
+// debugging a stale phone — can read which build the page is ACTUALLY running,
+// as opposed to which one is deployed.
+if (typeof window !== 'undefined') window.__STOCK_DIARY_BUILD__ = RUNNING_BUILD_ID;
+
 async function fetchDeployedBuildId() {
   try {
     const res = await fetch(`${base}version.json?ts=${Date.now()}`, { cache: 'no-store' });

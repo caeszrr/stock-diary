@@ -34,6 +34,76 @@ export async function fetchAllListed() {
   return { records, names };
 }
 
+/**
+ * Fetches the full 上市 market for ONE SPECIFIC DATE.
+ *
+ * STOCK_DAY_ALL (above) has no date parameter — it serves "the latest snapshot",
+ * whatever that happens to be, so a caller can never tell a fresh answer from a
+ * stale one. On 2026-08-05 it served 2026-08-04 all evening, which is how a
+ * whole trading session went missing while every request returned HTTP 200.
+ *
+ * This endpoint is addressed BY DATE, so staleness is structurally impossible:
+ * you either get the session you asked for, or a definite "no data". That
+ * property is what makes it usable as evidence — both for repairing a specific
+ * session and for proving a closure (see lib/closureEvidence.js).
+ *
+ * Returns { ok, records, names, empty }:
+ *   ok:false    → the source could not be reached/parsed. Says NOTHING about the
+ *                 date; callers must treat it as an outage, never as a closure.
+ *   empty:true  → the source answered definitively that it has no session then.
+ */
+export async function fetchAllListedForDate(dateIso) {
+  const date = isoToCompactAD(dateIso);
+  const url = `${MI_INDEX}?date=${date}&type=ALLBUT0999&response=json`;
+  let json;
+  try {
+    json = await fetchJson(url);
+  } catch (err) {
+    return { ok: false, empty: false, records: [], names: {}, error: err.message };
+  }
+  const table = (json?.tables || []).find((t) => /每日收盤行情/.test(t?.title || ''));
+  if (!table || !Array.isArray(table.data)) {
+    // TWSE answers a non-session date with stat "很抱歉，沒有符合條件的資料!" and no
+    // tables. That is a healthy, definite "no session" — distinct from a failure.
+    const definite = typeof json?.stat === 'string' && json.stat !== '';
+    return { ok: definite, empty: definite, records: [], names: {}, stat: json?.stat };
+  }
+
+  const records = [];
+  const names = {};
+  for (const row of table.data) {
+    const [code, name, volume, , value, open, high, low, close, signCell, magnitude] = row;
+    const c = parseNum(close);
+    const mag = parseNum(magnitude);
+    const sign = changeSign(signCell);
+    // sign 0 with a non-zero magnitude means the source did not tell us the
+    // direction (ex-rights markers). Rather than guess, omit pc — a missing
+    // previous close renders as no change%, which is honest; a guessed one lies.
+    const change = mag === undefined ? undefined : sign === 0 && mag !== 0 ? undefined : sign * mag;
+    records.push({
+      symbol: code,
+      date: dateIso,
+      o: parseNum(open),
+      h: parseNum(high),
+      l: parseNum(low),
+      c,
+      pc: c !== undefined && change !== undefined ? Number((c - change).toFixed(4)) : undefined,
+      v: parseNum(volume),
+      to: parseNum(value),
+    });
+    names[code] = name;
+  }
+  return { ok: true, empty: records.length === 0, records, names };
+}
+
+/** +1 / -1 / 0 from TWSE's HTML-wrapped 漲跌(+/-) cell ('X' and blank both mean no direction). */
+function changeSign(cell) {
+  const text = String(cell ?? '').replace(/<[^>]*>/g, '').trim();
+  if (text.includes('-')) return -1;
+  if (text.includes('+')) return 1;
+  return 0;
+}
+
 /** Fetches TAIEX close + market turnover for the last several trading days (no OHLC available from this endpoint). */
 export async function fetchTaiex() {
   const rows = await fetchJson(FMTQIK);

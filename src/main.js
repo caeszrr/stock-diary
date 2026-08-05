@@ -17,7 +17,8 @@ if ('serviceWorker' in navigator) {
 }
 
 import { loadManifest, loadStatus, loadMonth } from './lib/loadMonth.js';
-import { isTradingDay } from './lib/marketCalendar.js';
+import { isTradingDay, expectedSessionDate } from './lib/marketCalendar.js';
+import { taipeiTodayIso, enabledMonths, emptyMonthMessage } from './lib/monthTabs.js';
 import { startUpdateWatch, forceRefresh } from './lib/appUpdate.js';
 import { buildSystemStatusHtml } from './components/systemStatus.js';
 import { renderTabs } from './components/yearMonthTabs.js';
@@ -65,6 +66,7 @@ function startV1() {
 
   const state = {
     manifest: { years: [], monthsByYear: {} },
+    manifestLoaded: null,
     status: {},
     year: null,
     month: null,
@@ -83,13 +85,6 @@ function startV1() {
     if (!iso) return '—';
     const [, m, d] = iso.split('-');
     return `${Number(m)}/${Number(d)}`;
-  }
-
-  /** Today's date in Asia/Taipei (this is a Taiwan-market app — dates are Taipei, not UTC/local). */
-  function taipeiTodayIso() {
-    const parts = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Taipei', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
-    const m = Object.fromEntries(parts.map((p) => [p.type, p.value]));
-    return `${m.year}-${m.month}-${m.day}`;
   }
 
   /** Coverage stamp: "上市 7/24 · 67/67" per market, colored by completeness so a partial session is visible at a glance. */
@@ -119,16 +114,48 @@ function startV1() {
     statusLine.innerHTML = parts.join('') || '尚無資料';
   }
 
+  /**
+   * The app always opens on the current Taipei month. The one case where it
+   * cannot honour that faithfully is a manifest it failed to fetch — then it
+   * still shows the current month but has no idea which other months exist, so
+   * it says so rather than letting the tabs look silently truncated.
+   */
+  function fallbackNoticeHtml() {
+    if (state.manifestLoaded !== false) return '';
+    return `<div class="freshness-banner banner-warn">⚠ 無法讀取資料目錄，僅顯示本月；請點「🔄 重新整理資料」重試</div>`;
+  }
+
   /** One-line freshness banner: latest / holiday / delayed / anomaly, in zh-TW. */
   function freshnessBannerHtml() {
     const cov = state.status.coverage || {};
-    const markets = ['tw', 'tpex', 'us'];
-    const present = markets.filter((m) => cov[m]);
+    const markets = [
+      { key: 'tw', cal: 'tw' },
+      { key: 'tpex', cal: 'tw' },
+      { key: 'us', cal: 'us' },
+    ];
+    const present = markets.filter((m) => cov[m.key]);
     if (!present.length) return '';
-    const anyGap = present.some((m) => cov[m].health === 'gap');
-    const anyIncomplete = present.some((m) => !cov[m].complete && cov[m].health !== 'gap');
+    const anyGap = present.some((m) => cov[m.key].health === 'gap');
+    const anyIncomplete = present.some((m) => !cov[m.key].complete && cov[m.key].health !== 'gap');
     if (anyGap) return `<div class="freshness-banner banner-alert">⚠ 資料異常，已通知維護者</div>`;
     if (anyIncomplete) return `<div class="freshness-banner banner-warn">⏳ 資料延遲中，系統正在重試</div>`;
+
+    // "Complete" is not the same as "current". Each coverage record says only
+    // that the session it names is fully collected — it cannot say whether that
+    // is the session the calendar owes us. On 2026-08-05 every record read
+    // complete, and every one of them was describing 08-03, because two live
+    // trading days had been marked as holidays. The banner said 資料為最新
+    // while the current session was missing.
+    //
+    // So compare each market's covered session against the session the calendar
+    // expects by now. Behind = say so; never claim currency on a stale record.
+    const behind = present
+      .map((m) => ({ ...m, covered: cov[m.key].sessionDate, expected: expectedSessionDate(m.cal) }))
+      .filter((m) => m.covered && m.expected && m.covered < m.expected);
+    if (behind.length) {
+      const worst = behind.reduce((a, b) => (a.expected > b.expected ? a : b));
+      return `<div class="freshness-banner banner-warn">⏳ 資料延遲中，${mdLabel(worst.expected)} 尚未取得，系統正在重試</div>`;
+    }
 
     const today = taipeiTodayIso();
     const tradingSomewhere = isTradingDay('tw', today) || isTradingDay('us', today);
@@ -175,13 +202,12 @@ function startV1() {
 
   async function renderTabsAndMatrix() {
     renderTabs(tabsEl, {
-      years: state.manifest.years,
-      monthsByYear: state.manifest.monthsByYear,
+      manifest: state.manifest,
       selectedYear: state.year,
       selectedMonth: state.month,
       onSelectYear: (year) => {
         state.year = year;
-        const months = state.manifest.monthsByYear[year] || [];
+        const months = [...enabledMonths(state.manifest, year, taipeiTodayIso())].sort();
         if (!months.includes(state.month)) state.month = months[months.length - 1];
         renderTabsAndMatrix();
       },
@@ -190,11 +216,6 @@ function startV1() {
         renderTabsAndMatrix();
       },
     });
-
-    if (!state.year || !state.month) {
-      matrixWrapper.innerHTML = '<p class="empty-state">尚無資料，請稍後再試。</p>';
-      return;
-    }
 
     matrixWrapper.innerHTML = '<p class="loading-state">載入中…</p>';
     const dataMap = await loadMonthCached(state.year, state.month);
@@ -216,9 +237,23 @@ function startV1() {
       pinnedDataMap[symbol] = { ...(pinnedDataMap[symbol] || {}), ...byDate };
     }
 
-    bannerSlot.innerHTML = freshnessBannerHtml() + renderBlankModeBanner(groups);
+    bannerSlot.innerHTML = fallbackNoticeHtml() + freshnessBannerHtml() + renderBlankModeBanner(groups);
+
+    // A month with no session data is a normal state (a future month, the
+    // current month before its first close, a month the pipeline missed). It
+    // used to replace the grid with a sentence — which meant a future month had
+    // no shape at all. Now the calendar grid always renders and the sentence
+    // becomes a caption above it, so the user gets both the explanation and the
+    // month's structure.
+    const hasAnyData = Object.values(dataMap).some((byDate) => Object.keys(byDate).length > 0);
+    if (!hasAnyData) {
+      const msg = emptyMonthMessage(state.year, state.month, taipeiTodayIso());
+      if (msg) bannerSlot.innerHTML += `<div class="freshness-banner banner-holiday">${msg}</div>`;
+    }
 
     renderMatrix(matrixWrapper, {
+      year: state.year,
+      month: state.month,
       dataMap,
       pinnedDataMap,
       pinnedDates,
@@ -278,19 +313,14 @@ function startV1() {
     state.status = status;
     renderStatusLine();
 
-    const years = state.manifest.years || [];
-    const now = new Date();
-    const currentYear = String(now.getFullYear());
-    const currentMonth = String(now.getMonth() + 1).padStart(2, '0');
-
-    if (years.includes(currentYear) && (state.manifest.monthsByYear[currentYear] || []).includes(currentMonth)) {
-      state.year = currentYear;
-      state.month = currentMonth;
-    } else if (years.length) {
-      state.year = years[years.length - 1];
-      const months = state.manifest.monthsByYear[state.year] || [];
-      state.month = months[months.length - 1];
-    }
+    // The default view is the current Taipei month, always — including before
+    // that month's first session has been fetched. Only a manifest we could not
+    // load at all forces a fallback, and that fallback is announced on screen
+    // (fallbackNoticeHtml) instead of silently showing an older month.
+    const todayIso = taipeiTodayIso();
+    state.year = todayIso.slice(0, 4);
+    state.month = todayIso.slice(5, 7);
+    state.manifestLoaded = (state.manifest.years || []).length > 0;
 
     if (getStartMode() === null) {
       renderWelcome(app, () => renderTabsAndMatrix());
