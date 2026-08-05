@@ -145,8 +145,19 @@ export function judgeSession(group, { present, missing, outcomes }) {
   return { verdicts, suspectedClosure };
 }
 
-/** The symbols a stored coverage record already settled, so a sweep won't re-request them forever. */
+/**
+ * The symbols a stored coverage record already settled, so a sweep won't
+ * re-request them forever — "a confirmed no-trade is a verdict, not a failure".
+ *
+ * `market_closed` is deliberately NOT settled. It is a claim about the whole
+ * SESSION rather than about one symbol, and it is exactly the claim that can be
+ * revoked (a closure contradicted by data, or one that fails to re-prove
+ * itself). Treating it as settled would let a false closure suppress the very
+ * re-fetch that disproves it — which is how 2026-08-04/05 stayed missing.
+ */
 export function resolvedSymbols(coverageRecord) {
   const resolved = coverageRecord?.resolved || {};
-  return new Set(Object.keys(resolved).filter((s) => resolved[s] && resolved[s] !== 'unresolved'));
+  return new Set(
+    Object.keys(resolved).filter((s) => resolved[s] && resolved[s] !== 'unresolved' && resolved[s] !== 'market_closed')
+  );
 }

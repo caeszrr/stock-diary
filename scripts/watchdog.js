@@ -83,6 +83,11 @@ async function main() {
         // ---- Heal: re-fetch only the missing symbols for this session ----
         const healed = await healSession(g, session, {
           monthCache,
+          // Symbols already carrying a settled per-symbol verdict are left
+          // alone; re-requesting a confirmed no-trade forever is how a monitor
+          // turns a legitimate empty cell into permanent traffic. A
+          // 'market_closed' verdict is NOT settled — see resolvedSymbols().
+          skip: resolvedSymbols(statusNow.coverage?.[market]),
           onNetworkCall: () => { networkCalls += 1; },
         });
         present = healed.present;
