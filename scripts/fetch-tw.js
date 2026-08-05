@@ -1,4 +1,4 @@
-import { fetchAllListed, fetchTaiex, fetchListedHistory, fetchTaiexHistoryDay } from './lib/twse.js';
+import { fetchAllListed, fetchTaiex, fetchListedHistory, fetchTaiexHistoryDay, fetchAllListedForDate } from './lib/twse.js';
 import { upsertRecords, readJson, writeJson, updateStatus, regenerateManifest } from './lib/jsonStore.js';
 import { computeYearHighLow } from './lib/yearHighLow.js';
 import { loadTickers, isFetchable } from './lib/tickers.js';
@@ -12,35 +12,70 @@ import {
   writeCoverage,
 } from './lib/coverage.js';
 import { sweepRecentSessions } from './lib/recentSweep.js';
+import { reviewClosures } from './lib/closureEvidence.js';
 
 /**
- * Targeted, missing-only repair: when the bulk STOCK_DAY_ALL snapshot is stale
- * or a few symbols are absent, re-request just those symbols from the per-symbol
- * history endpoint (which is often fresh when the bulk one lags). Never re-pulls
- * the whole market. fetchListedHistory already backs off on 307/429 throttling.
+ * Targeted, missing-only repair.
+ *
+ * Step 1 is one BY-DATE full-market request. The usual reason a whole watchlist
+ * is missing is that the undated STOCK_DAY_ALL snapshot lagged a session (it
+ * served 2026-08-04 for the whole of 2026-08-05, HTTP 200 throughout). Asking
+ * the dated endpoint for the exact session settles that in a single call
+ * instead of 67, and cannot itself be stale.
+ *
+ * Step 2 falls back to per-symbol history for whatever is still missing — the
+ * case where the market did trade but individual symbols are absent. Only the
+ * missing ones are ever re-requested; the whole market is never re-pulled per
+ * symbol. fetchListedHistory already backs off on 307/429 throttling.
  */
 async function repairMissingTwse(missing, sessionDate) {
+  const repaired = [];
+  const wanted = new Set(missing);
+
+  const byDate = await fetchAllListedForDate(sessionDate);
+  if (byDate.ok && !byDate.empty) {
+    const hits = byDate.records.filter((r) => wanted.has(r.symbol) && r.c !== undefined);
+    if (hits.length) {
+      upsertRecords('tw', hits, { pretty: false });
+      // The dated call returns the whole market, so bank the full-market rows too.
+      upsertRecords('tw-all', byDate.records, { pretty: false });
+      hits.forEach((r) => wanted.delete(r.symbol));
+      repaired.push(...hits);
+      console.log(`[fetch-tw] by-date repair recovered ${hits.length} symbol(s) for ${sessionDate} in one request`);
+    }
+  } else if (!byDate.ok) {
+    console.error(`[fetch-tw] by-date repair unavailable for ${sessionDate}: ${byDate.error || byDate.stat}`);
+  }
+
   const year = isoYear(sessionDate);
   const month = isoMonth(sessionDate);
-  const repaired = [];
-  for (const symbol of missing) {
+  const perSymbol = [];
+  for (const symbol of wanted) {
     try {
       const rows = await fetchListedHistory(symbol, year, month);
       const rec = rows.find((r) => r.date === sessionDate);
-      if (rec && rec.c !== undefined) repaired.push(rec);
+      if (rec && rec.c !== undefined) perSymbol.push(rec);
     } catch (err) {
       console.error(`[fetch-tw] targeted repair ${symbol} FAILED: ${err.message}`);
     }
     await sleep(300);
   }
-  if (repaired.length) upsertRecords('tw', repaired, { pretty: false });
-  return repaired;
+  if (perSymbol.length) upsertRecords('tw', perSymbol, { pretty: false });
+  return [...repaired, ...perSymbol];
 }
 
 async function main() {
   const tickers = loadTickers().filter((t) => t.market === 'twse' && isFetchable(t));
   const configured = tickers.map((t) => t.symbol);
   const watchlistSymbols = new Set(configured);
+
+  // Closure verdicts are falsifiable, and this is where they get re-tested: a
+  // verdict contradicted by stored data is revoked outright, and one that never
+  // carried evidence must re-prove itself now. Costs zero network calls when
+  // every verdict on file is sound. It runs BEFORE the calendar is read, since
+  // a stale "holiday" would otherwise decide which session this run expects —
+  // the loop that hid two live trading days.
+  await reviewClosures({ log: (m) => console.log(`[fetch-tw] ${m}`) });
   const holidays = loadHolidays();
 
   console.log(`[fetch-tw] fetching TWSE full market snapshot...`);

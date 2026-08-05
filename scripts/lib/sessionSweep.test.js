@@ -57,13 +57,13 @@ describe('judgeSession — a confirmed no-trade is a verdict, not a failure', ()
   const outcomes = (pairs) => new Map(Object.entries(pairs));
 
   it('marks a source-confirmed empty day no_trade, not unresolved', () => {
-    const { verdicts, marketClosed } = judgeSession(TW, {
+    const { verdicts, suspectedClosure } = judgeSession(TW, {
       present: ['A'],
       missing: ['B'],
       outcomes: outcomes({ B: 'source-empty' }),
     });
     expect(verdicts.B).toBe('no_trade');
-    expect(marketClosed).toBe(false);
+    expect(suspectedClosure).toBe(false);
   });
 
   it('escalates a fetch error as unresolved', () => {
@@ -75,23 +75,29 @@ describe('judgeSession — a confirmed no-trade is a verdict, not a failure', ()
     expect(verdicts.B).toBe('unresolved');
   });
 
-  it('calls a whole-market source-confirmed absence a market closure', () => {
-    const { verdicts, marketClosed } = judgeSession(TW, {
+  // This test used to assert that a whole-market source-confirmed absence WAS a
+  // market closure, decided right here. That is the bug: this function cannot
+  // tell "the market did not trade" from "the market has not traded yet", and
+  // on 2026-08-03/04 it chose wrong twice and wrote both into the calendar. It
+  // may now only raise a suspicion for lib/closureEvidence.js to prove.
+  it('only SUSPECTS a closure on a whole-market source-confirmed absence', () => {
+    const { verdicts, suspectedClosure } = judgeSession(TW, {
       present: [],
       missing: ['A', 'B'],
       outcomes: outcomes({ A: 'source-empty', B: 'source-empty' }),
     });
-    expect(marketClosed).toBe(true);
-    expect(verdicts.A).toBe('market_closed');
+    expect(suspectedClosure).toBe(true);
+    expect(verdicts.A).toBe('unresolved');
+    expect(verdicts.A).not.toBe('market_closed');
   });
 
-  it('does NOT call it a closure when a network error could explain the absence', () => {
-    const { marketClosed } = judgeSession(TW, {
+  it('does NOT even suspect a closure when a network error could explain the absence', () => {
+    const { suspectedClosure } = judgeSession(TW, {
       present: [],
       missing: ['A', 'B'],
       outcomes: outcomes({ A: 'source-empty', B: 'fetch-error' }),
     });
-    expect(marketClosed).toBe(false);
+    expect(suspectedClosure).toBe(false);
   });
 
   it('marks a group with no repair path no_history rather than unresolved', () => {

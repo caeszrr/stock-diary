@@ -113,10 +113,22 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          # NOTE the path. This used to read ./public/data/watchdog-report.json,
+          # which scripts/watchdog.js has never written — the report goes to the
+          # repo root precisely so it is not deployed. require() therefore threw,
+          # `|| true` swallowed it, gaps.jsonl came out empty, and the step
+          # exited 1 without ever filing an Issue. The escalation channel was
+          # dead for every gap it was built to report.
           node -e '
-            const r = require("./public/data/watchdog-report.json");
+            const r = require("./watchdog-report.json");
             for (const u of (r.unresolved || [])) {
-              console.log(JSON.stringify({ title: `資料異常：${u.label} ${u.session}`, market: u.market, session: u.session, label: u.label, symbols: u.symbols }));
+              console.log(JSON.stringify({ kind: "gap", title: `資料異常：${u.label} ${u.session}`, label: u.label, session: u.session, symbols: u.symbols }));
+            }
+            // A run of unexplained sessions escalates even when every symbol
+            // carries a verdict — "all resolved" is exactly what the system
+            // reported while two live trading days were missing.
+            for (const e of (r.escalations || [])) {
+              console.log(JSON.stringify({ kind: "streak", title: `資料連續中斷：${e.label} ${e.sessions.join("、")}`, label: e.label, sessions: e.sessions, streak: e.streak }));
             }
           ' > gaps.jsonl || true
           if [ ! -s gaps.jsonl ]; then
@@ -124,7 +136,13 @@ jobs:
           fi
           while IFS= read -r line; do
             title=$(echo "$line" | node -e 'process.stdin.once("data",d=>process.stdout.write(JSON.parse(d).title))')
-            body=$(echo "$line" | node -e 'process.stdin.once("data",d=>{const g=JSON.parse(d);process.stdout.write(`市場：${g.label}\n交易日：${g.session}\n仍缺少（已嘗試定向補抓仍失敗）：\n${g.symbols.map(s=>"- "+s).join("\n")}\n\n已嘗試：定向重新抓取缺漏股票（指數退避）。此為系統自動通報。\n（GitHub 會將此 Issue 以 email 通知維護者。）`)})')
+            body=$(echo "$line" | node -e 'process.stdin.once("data",d=>{const g=JSON.parse(d);
+              const common = "\n\n此為系統自動通報。\n（GitHub 會將此 Issue 以 email 通知維護者。）";
+              if (g.kind === "streak") {
+                process.stdout.write(`市場：${g.label}\n連續 ${g.streak} 個應有交易日未取得資料：\n${g.sessions.map(s=>"- "+s).join("\n")}\n\n連續兩個交易日缺漏，幾乎不可能是臨時休市（真正的颱風假會有公告，且不會連續兩天無人察覺）。請視為抓取中斷處理，切勿當成休市。${common}`);
+              } else {
+                process.stdout.write(`市場：${g.label}\n交易日：${g.session}\n仍缺少（已嘗試定向補抓仍失敗）：\n${g.symbols.map(s=>"- "+s).join("\n")}\n\n已嘗試：定向重新抓取缺漏股票（指數退避）。${common}`);
+              }})')
             existing=$(gh issue list --state open --search "in:title \"$title\"" --json number --jq ".[0].number" || echo "")
             if [ -n "$existing" ]; then
               gh issue comment "$existing" --body "$body"$'\n\n（仍未解決，於 '"$(date -u +%Y-%m-%dT%H:%M:%SZ)"' 再次檢查）"

@@ -1,6 +1,6 @@
 import { formatDateHeader, escapeHtml } from '../lib/format.js';
 import { renderCell } from './cell.js';
-import { marketKeysFor } from '../lib/marketCalendar.js';
+import { marketKeysFor, expectedSessionDate } from '../lib/marketCalendar.js';
 import { getMarketNote, setMarketNote, getProfile, setProfile, isPinned } from '../lib/userData.js';
 
 /** Union of every date that appears under any symbol in dataMap, sorted ascending. */
@@ -58,7 +58,16 @@ function buildRow({ symbol, name_zh, group, market, pending, isUserAdded }, data
   tr.dataset.symbol = symbol;
 
   const { cov: covKey, cal } = marketKeysFor({ market, symbol });
-  const stateCtx = { covMarket: covKey, calMarket: cal, coverage: covKey ? coverage[covKey] : null };
+  // expectedSession is the calendar's yardstick, NOT the coverage record's
+  // sessionDate. A blank past that yardstick is a future day; a blank before it
+  // is data we owe the user. Deriving it from coverage instead would let a
+  // stalled pipeline redefine "future" and hide its own gap.
+  const stateCtx = {
+    covMarket: covKey,
+    calMarket: cal,
+    coverage: covKey ? coverage[covKey] : null,
+    expectedSession: expectedSessionDate(cal),
+  };
 
   const nameCell = document.createElement('td');
   nameCell.className = 'name-cell sticky-col';

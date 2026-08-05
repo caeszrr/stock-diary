@@ -17,7 +17,7 @@ if ('serviceWorker' in navigator) {
 }
 
 import { loadManifest, loadStatus, loadMonth } from './lib/loadMonth.js';
-import { isTradingDay } from './lib/marketCalendar.js';
+import { isTradingDay, expectedSessionDate } from './lib/marketCalendar.js';
 import { taipeiTodayIso, enabledMonths, emptyMonthMessage } from './lib/monthTabs.js';
 import { startUpdateWatch, forceRefresh } from './lib/appUpdate.js';
 import { buildSystemStatusHtml } from './components/systemStatus.js';
@@ -128,13 +128,34 @@ function startV1() {
   /** One-line freshness banner: latest / holiday / delayed / anomaly, in zh-TW. */
   function freshnessBannerHtml() {
     const cov = state.status.coverage || {};
-    const markets = ['tw', 'tpex', 'us'];
-    const present = markets.filter((m) => cov[m]);
+    const markets = [
+      { key: 'tw', cal: 'tw' },
+      { key: 'tpex', cal: 'tw' },
+      { key: 'us', cal: 'us' },
+    ];
+    const present = markets.filter((m) => cov[m.key]);
     if (!present.length) return '';
-    const anyGap = present.some((m) => cov[m].health === 'gap');
-    const anyIncomplete = present.some((m) => !cov[m].complete && cov[m].health !== 'gap');
+    const anyGap = present.some((m) => cov[m.key].health === 'gap');
+    const anyIncomplete = present.some((m) => !cov[m.key].complete && cov[m.key].health !== 'gap');
     if (anyGap) return `<div class="freshness-banner banner-alert">⚠ 資料異常，已通知維護者</div>`;
     if (anyIncomplete) return `<div class="freshness-banner banner-warn">⏳ 資料延遲中，系統正在重試</div>`;
+
+    // "Complete" is not the same as "current". Each coverage record says only
+    // that the session it names is fully collected — it cannot say whether that
+    // is the session the calendar owes us. On 2026-08-05 every record read
+    // complete, and every one of them was describing 08-03, because two live
+    // trading days had been marked as holidays. The banner said 資料為最新
+    // while the current session was missing.
+    //
+    // So compare each market's covered session against the session the calendar
+    // expects by now. Behind = say so; never claim currency on a stale record.
+    const behind = present
+      .map((m) => ({ ...m, covered: cov[m.key].sessionDate, expected: expectedSessionDate(m.cal) }))
+      .filter((m) => m.covered && m.expected && m.covered < m.expected);
+    if (behind.length) {
+      const worst = behind.reduce((a, b) => (a.expected > b.expected ? a : b));
+      return `<div class="freshness-banner banner-warn">⏳ 資料延遲中，${mdLabel(worst.expected)} 尚未取得，系統正在重試</div>`;
+    }
 
     const today = taipeiTodayIso();
     const tradingSomewhere = isTradingDay('tw', today) || isTradingDay('us', today);

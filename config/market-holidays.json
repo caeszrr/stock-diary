@@ -80,6 +80,15 @@
     "2026-12-25"
   ],
   "twDiscovered": [
-    "2026-07-10"
+    {
+      "date": "2026-07-10",
+      "confirmedAt": "2026-08-05T16:43:43.615Z",
+      "evidence": {
+        "wallClock": "passed",
+        "twse": "healthy-empty",
+        "tpex": "healthy-empty",
+        "confirmedAt": "2026-08-05T16:43:43.615Z"
+      }
+    }
   ]
 }

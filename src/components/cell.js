@@ -3,28 +3,40 @@ import { getCellNote, setCellNote } from '../lib/userData.js';
 import { isTradingDay } from '../lib/marketCalendar.js';
 
 /**
- * A blank cell used to mean three different things. Render them distinctly so the
- * UI stops lying by omission: 休市 (calendar closed) / 資料補抓中 (expected, not yet
- * arrived or being repaired) / 無成交・停牌 (source confirms no record) / unknown.
+ * A blank cell means several different things. Render them distinctly so the UI
+ * stops lying by omission: 休市 (confirmed closed) / 資料延遲中 (owed but not here)
+ * / 未到 (future session) / 無成交・停牌 (source confirms no record) / unknown.
+ *
+ * The ordering matters, and one rule outranks the rest: 休 renders ONLY for a
+ * date the calendar positively confirms closed. `isTradingDay` reads the `tw`
+ * list, which now contains confirmed closures only — a merely suspected one is
+ * deliberately absent and therefore falls through to 資料延遲中 below.
+ *
+ * That is the correction for 2026-08-04/05, when two ordinary trading days were
+ * written into the calendar as closures and every cell in the app repeated the
+ * claim. An unexplained hole must look like a problem, not like a holiday.
  */
 function blankStateHtml(symbol, date, ctx) {
   if (!ctx || !ctx.calMarket || !date) return '<div class="cell-empty"></div>';
   if (!isTradingDay(ctx.calMarket, date)) {
-    return '<div class="cell-empty cell-holiday" title="休市（當日該市場未開盤）">休</div>';
+    return '<div class="cell-empty cell-holiday" title="休市（當日該市場未開盤，已確認）">休</div>';
   }
   const cov = ctx.coverage;
   const resolved = cov?.resolved?.[symbol];
   if (resolved === 'no_trade' || resolved === 'suspended' || resolved === 'market_closed') {
     return '<div class="cell-empty cell-notrade" title="無成交・停牌（來源確認當日無此檔交易）">無</div>';
   }
-  const latest = cov?.sessionDate;
-  if (latest && date > latest) {
-    return '<div class="cell-empty cell-pending" title="資料補抓中（尚未到，系統重試中）">⋯</div>';
+
+  // A session the calendar does not owe us yet: later today, or a future day in
+  // the pre-rendered month grid. Dim and quiet — nothing is wrong.
+  const expected = ctx.expectedSession;
+  if (expected && date > expected) {
+    return '<div class="cell-empty cell-future" title="尚未開盤（未來交易日）"></div>';
   }
-  if (latest && date === latest && cov?.missingCodes?.includes(symbol)) {
-    return '<div class="cell-empty cell-pending" title="資料補抓中（系統重試中）">⋯</div>';
-  }
-  return '<div class="cell-empty" title="無資料"></div>';
+
+  // Owed and absent. Whether the pipeline has noticed yet or not, the honest
+  // word is "delayed" — never a blank that reads as "nothing happened".
+  return '<div class="cell-empty cell-pending" title="資料延遲中（應有資料尚未取得，系統重試中）">⋯</div>';
 }
 
 function emphasisClass(note) {

@@ -8,6 +8,7 @@
   --up: #d0342c; /* red = up, Taiwan convention */
   --down: #1a7a3c; /* green = down, Taiwan convention */
   --accent: #6b3fa0;
+  --future-cell: #fbfafc; /* future trading days in the month grid — present but recessive */
   --sans: system-ui, 'Segoe UI', 'Noto Sans TC', Roboto, sans-serif;
   color-scheme: light dark;
 }
@@ -22,6 +23,7 @@
     --sticky-bg: #201d26;
     --up: #ff6b61;
     --down: #4fd97a;
+    --future-cell: #1b1922;
   }
 }
 
@@ -945,6 +947,9 @@ td.pin-separator {
 .cell-empty.cell-holiday { color: var(--text-dim); }
 .cell-empty.cell-notrade { color: var(--text-dim); font-weight: 600; }
 .cell-empty.cell-pending { color: var(--status-warn); opacity: 0.9; letter-spacing: 1px; }
+/* A future trading day in the pre-rendered grid: present, dimmed, and silent —
+   it must not read as missing data, so it carries no glyph at all. */
+.cell-empty.cell-future { background: var(--future-cell); }
 
 /* Freshness banner */
 .freshness-banner {

@@ -129,6 +129,28 @@ export function expectedSessionDate(market, { today, holidays = loadHolidays(), 
   return latestTradingDayOnOrBefore(market, ref, holidays);
 }
 
+/**
+ * Has `dateIso`'s session finished and had time to publish, judged on the
+ * MARKET'S OWN clock right now?
+ *
+ * This is the hard floor under every verdict about a date. On 2026-08-03 and
+ * 2026-08-04 the watchdog declared the NEXT day a market closure at 00:44 and
+ * 00:26 Taipei — hours before those markets opened — because a per-symbol
+ * history endpoint understandably had no rows for a day that had not happened.
+ * "No data yet" and "no trading that day" look identical from the source; only
+ * the clock can separate them, so the clock gets the final say.
+ *
+ * Deliberately independent of expectedSessionDate and of any stored coverage
+ * record: those are derived state and were themselves poisoned by the false
+ * verdicts. A closure check must not be able to talk itself past this.
+ */
+export function publishCutoffPassed(market, dateIso, now = new Date()) {
+  const cutoff = PUBLISH_CUTOFF[holidayKey(market)];
+  const here = nowInZone(cutoff.tz, now);
+  if (here.date !== dateIso) return here.date > dateIso;
+  return here.hour >= cutoff.hour;
+}
+
 /** The subset of `symbols` that has a usable close (`c` defined) for `sessionDate` in the given market's month file. */
 export function presentSymbols(market, sessionDate, symbols) {
   const store = readMonthFile(market, isoYear(sessionDate), isoMonth(sessionDate));

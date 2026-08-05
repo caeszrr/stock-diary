@@ -111,26 +111,38 @@ export async function healSession(group, session, { monthCache, skip = new Set()
  * Turns per-symbol fetch outcomes into verdicts. A confirmed no-trade is a
  * verdict, not a failure — only 'unresolved' is worth waking a human for.
  *
- * Returns { verdicts, marketClosed }. `marketClosed` is true when the whole
- * group is absent AND the source confirmed no session with no network errors:
- * a real closure the planned calendar didn't list (a typhoon day).
+ * Returns { verdicts, suspectedClosure }.
+ *
+ * NOTE what this deliberately no longer does. It used to conclude, on its own,
+ * that a whole-market absence plus source-empty responses meant the market had
+ * been closed, and write that straight into the holiday calendar. That is how
+ * two ordinary trading days became permanent holidays: a per-symbol endpoint
+ * has no rows for a day that has not happened yet, which is indistinguishable
+ * here from a day that did not trade.
+ *
+ * So this function may only ever raise a SUSPICION. Until that suspicion is
+ * confirmed against positive evidence (lib/closureEvidence.js), every missing
+ * symbol stays 'unresolved' — i.e. loud, escalating, and visible as a delay
+ * rather than as 休. Failing to confirm leaves the gap noisy, which is the
+ * correct direction to fail in.
  */
 export function judgeSession(group, { present, missing, outcomes }) {
   const anySourceEmpty = missing.some((s) => outcomes.get(s) === 'source-empty');
   const anyFetchError = missing.some((s) => outcomes.get(s) === 'fetch-error');
   const verdicts = {};
 
-  if (present.length === 0 && anySourceEmpty && !anyFetchError && group.fetchRows) {
-    missing.forEach((s) => (verdicts[s] = 'market_closed'));
-    return { verdicts, marketClosed: true };
-  }
   for (const s of missing) {
     const o = outcomes.get(s);
     if (o === 'source-empty') verdicts[s] = 'no_trade';
     else if (o === 'no-repair-path') verdicts[s] = 'no_history';
     else verdicts[s] = 'unresolved';
   }
-  return { verdicts, marketClosed: false };
+
+  // Whole group absent, sources answered, nothing errored: this MIGHT be a
+  // closure. The caller must prove it before anyone is allowed to say so.
+  const suspectedClosure = present.length === 0 && anySourceEmpty && !anyFetchError && !!group.fetchRows;
+  if (suspectedClosure) missing.forEach((s) => (verdicts[s] = 'unresolved'));
+  return { verdicts, suspectedClosure };
 }
 
 /** The symbols a stored coverage record already settled, so a sweep won't re-request them forever. */

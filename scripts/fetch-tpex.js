@@ -11,11 +11,15 @@ import {
   writeCoverage,
 } from './lib/coverage.js';
 import { sweepRecentSessions } from './lib/recentSweep.js';
+import { reviewClosures } from './lib/closureEvidence.js';
 
 async function main() {
   const tickers = loadTickers().filter((t) => t.market === 'tpex' && isFetchable(t));
   const configured = tickers.map((t) => t.symbol);
   const watchlistSymbols = new Set(configured);
+
+  // Re-test closure verdicts before reading the calendar they feed (see fetch-tw.js).
+  await reviewClosures({ log: (m) => console.log(`[fetch-tpex] ${m}`) });
   const holidays = loadHolidays();
 
   console.log(`[fetch-tpex] fetching TPEx full market snapshot...`);

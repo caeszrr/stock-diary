@@ -10,6 +10,7 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { rocToISO } from './lib/dates.js';
+import { rebuildTwCalendar } from './lib/closureEvidence.js';
 
 const OUT = path.join(process.cwd(), 'config', 'market-holidays.json');
 const TWSE_HOLIDAY_URL = 'https://openapi.twse.com.tw/v1/holidaySchedule/holidaySchedule';
@@ -105,18 +106,27 @@ async function main() {
     console.error(`[holidays] TWSE fetch FAILED, keeping existing planned list: ${err.message}`);
   }
 
-  const tw = [...new Set([...twPlanned, ...twDiscovered])].sort();
   const us = [...new Set(years.flatMap(usNyseHolidays))].sort();
 
+  // `tw` is the rendered calendar — the list that decides whether a blank cell
+  // says 休. Only CONFIRMED closures may enter it (lib/closureEvidence.js):
+  // planned dates from TWSE's own schedule, plus discovered ones that carry
+  // dual-exchange evidence. A discovered entry still awaiting proof stays on
+  // file but out of this list, so an unproven gap renders as a delay.
   const out = {
     _meta: { updated: new Date().toISOString(), twSource, usSource: `nyse-rules ${years.join(',')}` },
-    tw,
+    tw: [],
     us,
     twPlanned,
     twDiscovered,
   };
+  rebuildTwCalendar(out);
   fs.writeFileSync(OUT, `${JSON.stringify(out, null, 2)}\n`);
-  console.log(`[holidays] wrote ${tw.length} TW (${twPlanned.length} planned + ${twDiscovered.length} discovered) + ${us.length} US holiday dates (tw: ${twSource})`);
+  const confirmedDiscovered = out.tw.filter((d) => !twPlanned.includes(d)).length;
+  console.log(
+    `[holidays] wrote ${out.tw.length} TW (${twPlanned.length} planned + ${confirmedDiscovered} confirmed discovered ` +
+      `of ${twDiscovered.length} on file) + ${us.length} US holiday dates (tw: ${twSource})`
+  );
 }
 
 main().catch((err) => {

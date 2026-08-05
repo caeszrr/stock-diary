@@ -29,20 +29,36 @@ import {
 import { buildGroups } from './lib/marketGroups.js';
 import { presentForSession, judgeableSessions, healSession, judgeSession, resolvedSymbols } from './lib/sessionSweep.js';
 import { scanSanity, crossMarketDrift } from './lib/sanity.js';
+import { confirmTwClosure, recordConfirmedClosure, reviewClosures, unexplainedSessions } from './lib/closureEvidence.js';
 
 const SWEEP = process.env.WATCHDOG_SWEEP === '1' || process.argv.includes('--sweep');
 const LOOKBACK = SWEEP ? 14 : 1;
-const HOLIDAYS_PATH = path.join(process.cwd(), 'config', 'market-holidays.json');
 
-const holidays = loadHolidays();
 // Group definitions (including the idx stores the watchdog previously ignored —
 // issue #3) live in lib/marketGroups.js, shared with every fetch script's sweep.
 const GROUPS = buildGroups();
 
 async function main() {
   const monthCache = new Map();
-  const report = { mode: SWEEP ? 'sweep' : 'latest', lookback: LOOKBACK, markets: {}, unresolved: [], healed: [], discoveredClosures: [] };
+  const report = {
+    mode: SWEEP ? 'sweep' : 'latest',
+    lookback: LOOKBACK,
+    markets: {},
+    unresolved: [],
+    healed: [],
+    discoveredClosures: [],
+    closureChecks: [],
+    escalations: [],
+  };
   let networkCalls = 0;
+
+  // Existing closure verdicts are re-tested BEFORE anything is judged against
+  // them, because every downstream expectation reads the calendar. A verdict
+  // that is contradicted by stored data, or that was never backed by evidence,
+  // must not be allowed to shape this run's idea of which sessions to expect —
+  // that feedback loop is exactly what kept 8/4 and 8/5 invisible for two days.
+  report.closureReview = await reviewClosures({ log: (m) => console.log(`[watchdog] ${m}`) });
+  const holidays = loadHolidays(); // reload: the review may have changed the calendar
 
   const statusNow = readJson('status.json', {});
   for (const [market, g] of Object.entries(GROUPS)) {
@@ -78,11 +94,29 @@ async function main() {
         // ---- Reach a verdict for whatever is still missing ----
         const judged = judgeSession(g, { present, missing, outcomes: healed.outcomes });
         verdicts = judged.verdicts;
-        if (judged.marketClosed) {
-          // A genuine closure the planned calendar didn't list (typhoon day etc.).
-          // Record it and stop retrying.
-          recordDiscoveredClosure(g.calendar, session);
-          report.discoveredClosures.push({ market: g.calendar, session });
+
+        // A suspected closure is only ever a question. Answering it requires
+        // positive evidence: the exchanges' own by-date records, and a wall
+        // clock that says the session has actually finished. If the answer is
+        // anything other than a confirmed closure, the symbols stay
+        // 'unresolved' — loud — which is how an outage is supposed to behave.
+        if (judged.suspectedClosure && g.calendar === 'tw') {
+          const outcome = await confirmTwClosure(session);
+          networkCalls += 2;
+          report.closureChecks.push({ session, confirmed: outcome.confirmed, reason: outcome.reason });
+          if (outcome.confirmed) {
+            recordConfirmedClosure(session, outcome.evidence, { log: (m) => console.log(`[watchdog] ${m}`) });
+            missing.forEach((s) => (verdicts[s] = 'market_closed'));
+            report.discoveredClosures.push({ market: g.calendar, session, evidence: outcome.evidence });
+          } else {
+            console.log(
+              `[watchdog]   suspected closure ${session} NOT confirmed (${outcome.reason}) — ` +
+                'treating as an outage, not a holiday'
+            );
+          }
+        } else if (judged.suspectedClosure) {
+          // Non-TW calendars have no by-date evidence path here; a human confirms.
+          console.log(`[watchdog]   suspected ${g.label} closure ${session} — left unresolved for a human`);
         }
 
         const unresolvedSyms = Object.keys(verdicts).filter((s) => verdicts[s] === 'unresolved');
@@ -148,6 +182,32 @@ async function main() {
     }
   }
 
+  // ---- Escalation: a run of unexplained sessions is an outage, not a calendar ----
+  //
+  // One missing session can be a slow source. Two consecutive ones cannot
+  // plausibly both be surprise closures — a real typhoon day is announced, and
+  // never twice running without anyone noticing. So a streak escalates even
+  // when every individual session looks "resolved", which is the failure this
+  // whole change exists to prevent.
+  for (const [market, g] of Object.entries(GROUPS)) {
+    if (!g.symbols.length || g.calendar !== 'tw') continue;
+    const recent = judgeableSessions(g, { lookback: 3, holidays });
+    const bad = unexplainedSessions(recent, (s) =>
+      presentForSession(new Map(), g.store, s, g.symbols).length === g.symbols.length
+    );
+    // Consecutive from the newest end only.
+    let streak = 0;
+    for (const s of [...recent].reverse()) {
+      if (bad.includes(s)) streak += 1;
+      else break;
+    }
+    if (streak >= 2) {
+      const sessions = [...recent].reverse().slice(0, streak);
+      report.escalations.push({ market, label: g.label, streak, sessions });
+      console.log(`[watchdog]   ESCALATE ${g.label}: ${streak} consecutive unexplained sessions — ${sessions.join(', ')}`);
+    }
+  }
+
   if (networkCalls > 0 || report.healed.length || report.discoveredClosures.length) regenerateManifest();
   // Report goes to the repo root (NOT public/data), so it is never committed/deployed — it is a run artifact.
   fs.writeFileSync(
@@ -156,13 +216,18 @@ async function main() {
   );
 
   const totalUnresolved = report.unresolved.reduce((n, r) => n + r.symbols.length, 0);
+  const rev = report.closureReview || {};
   console.log(
     `[watchdog] mode=${report.mode} networkCalls=${networkCalls} healed=${report.healed.length} ` +
-      `discoveredClosures=${report.discoveredClosures.length} unresolved=${totalUnresolved}`
+      `discoveredClosures=${report.discoveredClosures.length} revokedClosures=${(rev.revoked || []).length} ` +
+      `escalations=${report.escalations.length} unresolved=${totalUnresolved}`
   );
   for (const u of report.unresolved) console.log(`[watchdog]   UNRESOLVED ${u.label} ${u.session}: ${u.symbols.join(', ')}`);
 
-  if (totalUnresolved > 0) process.exitCode = 1;
+  // Escalate a streak even if every symbol carries a verdict: "everything is
+  // resolved" was precisely the state the system reported while two sessions
+  // were missing.
+  if (totalUnresolved > 0 || report.escalations.length) process.exitCode = 1;
 }
 
 /**
@@ -173,16 +238,6 @@ async function main() {
 function persistCoverage(market, record) {
   const existing = readJson('status.json', {}).coverage?.[market] || {};
   writeCoverage(market, { ...existing, ...record, lastSuccessfulWrite: existing.lastSuccessfulWrite || record.lastSuccessfulWrite });
-}
-
-/** Appends a confirmed ad-hoc closure to the holiday calendar's twDiscovered (idempotent). */
-function recordDiscoveredClosure(calendar, session) {
-  if (calendar !== 'tw') return; // us surprise closures are rare; handled as unresolved for a human to confirm
-  const j = fs.existsSync(HOLIDAYS_PATH) ? JSON.parse(fs.readFileSync(HOLIDAYS_PATH, 'utf8')) : { tw: [], us: [], twPlanned: [], twDiscovered: [] };
-  j.twDiscovered = [...new Set([...(j.twDiscovered || []), session])].sort();
-  j.tw = [...new Set([...(j.twPlanned || j.tw || []), ...j.twDiscovered])].sort();
-  fs.writeFileSync(HOLIDAYS_PATH, `${JSON.stringify(j, null, 2)}\n`);
-  console.log(`[watchdog]   discovered market closure ${session} → added to twDiscovered`);
 }
 
 main().catch((err) => {
