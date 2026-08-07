@@ -62,7 +62,8 @@
         "snapshotDate": "2026-08-06",
         "taiex": true
       },
-      "lastSuccessfulWrite": "2026-08-07T11:12:54.974Z"
+      "lastSuccessfulWrite": "2026-08-07T11:12:54.974Z",
+      "health": "healthy"
     },
     "tpex": {
       "sessionDate": "2026-08-07",
@@ -76,7 +77,8 @@
         "count": 10276,
         "snapshotDate": "2026-08-07"
       },
-      "lastSuccessfulWrite": "2026-08-07T11:13:45.332Z"
+      "lastSuccessfulWrite": "2026-08-07T11:13:45.332Z",
+      "health": "healthy"
     },
     "us": {
       "sessionDate": "2026-08-06",
