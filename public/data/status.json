@@ -92,7 +92,8 @@
         "indices": "4/4",
         "calendarExpected": "2026-08-13"
       },
-      "lastSuccessfulWrite": "2026-08-14T05:21:00.377Z"
+      "lastSuccessfulWrite": "2026-08-14T05:21:00.377Z",
+      "health": "healthy"
     },
     "idxTw": {
       "sessionDate": "2026-08-13",
