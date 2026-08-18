@@ -92,7 +92,8 @@
         "indices": "4/4",
         "calendarExpected": "2026-08-18"
       },
-      "lastSuccessfulWrite": "2026-08-18T23:04:01.811Z"
+      "lastSuccessfulWrite": "2026-08-18T23:04:01.811Z",
+      "health": "healthy"
     },
     "idxTw": {
       "sessionDate": "2026-08-18",
@@ -106,20 +107,15 @@
       "health": "healthy"
     },
     "idxUs": {
-      "sessionDate": "2026-08-17",
+      "sessionDate": "2026-08-18",
       "expectedCount": 4,
-      "actualCount": 0,
-      "missingCodes": [
-        "DJI",
-        "IXIC",
-        "SPX",
-        "SOX"
-      ],
+      "actualCount": 4,
+      "missingCodes": [],
       "resolved": {},
       "stale": false,
-      "complete": false,
+      "complete": true,
       "lastSuccessfulWrite": "2026-08-03T17:30:34.981Z",
-      "health": "gap"
+      "health": "healthy"
     }
   }
 }
