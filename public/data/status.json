@@ -62,7 +62,8 @@
         "snapshotDate": "2026-08-17",
         "taiex": true
       },
-      "lastSuccessfulWrite": "2026-08-18T09:03:19.786Z"
+      "lastSuccessfulWrite": "2026-08-18T09:03:19.786Z",
+      "health": "healthy"
     },
     "tpex": {
       "sessionDate": "2026-08-18",
@@ -76,25 +77,47 @@
         "count": 10561,
         "snapshotDate": "2026-08-18"
       },
-      "lastSuccessfulWrite": "2026-08-18T09:03:27.180Z"
+      "lastSuccessfulWrite": "2026-08-18T09:03:27.180Z",
+      "health": "healthy"
     },
     "us": {
-      "sessionDate": "2026-08-14",
+      "sessionDate": "2026-08-17",
       "expectedCount": 20,
-      "actualCount": 20,
-      "missingCodes": [],
+      "actualCount": 0,
+      "missingCodes": [
+        "ARM",
+        "NVDA",
+        "AMD",
+        "MRVL",
+        "TSM",
+        "INTC",
+        "MU",
+        "SNDK",
+        "STX",
+        "DRAM",
+        "LITE",
+        "GLW",
+        "GOOG",
+        "AAPL",
+        "AMZN",
+        "TSLA",
+        "ORCL",
+        "SPCX",
+        "MP",
+        "GOOP"
+      ],
       "resolved": {},
       "stale": false,
-      "complete": true,
+      "complete": false,
       "fullMarket": {
         "indices": "4/4",
         "calendarExpected": "2026-08-14"
       },
       "lastSuccessfulWrite": "2026-08-15T23:59:11.776Z",
-      "health": "healthy"
+      "health": "gap"
     },
     "idxTw": {
-      "sessionDate": "2026-08-17",
+      "sessionDate": "2026-08-18",
       "expectedCount": 1,
       "actualCount": 1,
       "missingCodes": [],
@@ -105,15 +128,20 @@
       "health": "healthy"
     },
     "idxUs": {
-      "sessionDate": "2026-08-14",
+      "sessionDate": "2026-08-17",
       "expectedCount": 4,
-      "actualCount": 4,
-      "missingCodes": [],
+      "actualCount": 0,
+      "missingCodes": [
+        "DJI",
+        "IXIC",
+        "SPX",
+        "SOX"
+      ],
       "resolved": {},
       "stale": false,
-      "complete": true,
+      "complete": false,
       "lastSuccessfulWrite": "2026-08-03T17:30:34.981Z",
-      "health": "healthy"
+      "health": "gap"
     }
   }
 }
