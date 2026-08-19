@@ -62,7 +62,8 @@
         "snapshotDate": "2026-08-18",
         "taiex": true
       },
-      "lastSuccessfulWrite": "2026-08-19T09:08:48.338Z"
+      "lastSuccessfulWrite": "2026-08-19T09:08:48.338Z",
+      "health": "healthy"
     },
     "tpex": {
       "sessionDate": "2026-08-19",
@@ -76,7 +77,8 @@
         "count": 10602,
         "snapshotDate": "2026-08-19"
       },
-      "lastSuccessfulWrite": "2026-08-19T09:08:51.765Z"
+      "lastSuccessfulWrite": "2026-08-19T09:08:51.765Z",
+      "health": "healthy"
     },
     "us": {
       "sessionDate": "2026-08-18",
@@ -94,7 +96,7 @@
       "health": "healthy"
     },
     "idxTw": {
-      "sessionDate": "2026-08-18",
+      "sessionDate": "2026-08-19",
       "expectedCount": 1,
       "actualCount": 1,
       "missingCodes": [],
