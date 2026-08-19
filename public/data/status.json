@@ -92,7 +92,8 @@
         "indices": "4/4",
         "calendarExpected": "2026-08-19"
       },
-      "lastSuccessfulWrite": "2026-08-19T23:36:23.041Z"
+      "lastSuccessfulWrite": "2026-08-19T23:36:23.041Z",
+      "health": "healthy"
     },
     "idxTw": {
       "sessionDate": "2026-08-19",
@@ -106,7 +107,7 @@
       "health": "healthy"
     },
     "idxUs": {
-      "sessionDate": "2026-08-18",
+      "sessionDate": "2026-08-19",
       "expectedCount": 4,
       "actualCount": 4,
       "missingCodes": [],
