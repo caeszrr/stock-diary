@@ -62,35 +62,37 @@
         "snapshotDate": "2026-08-20",
         "taiex": true
       },
-      "lastSuccessfulWrite": "2026-08-21T07:53:47.620Z"
+      "lastSuccessfulWrite": "2026-08-21T07:53:47.620Z",
+      "health": "healthy"
     },
     "tpex": {
       "sessionDate": "2026-08-21",
       "expectedCount": 13,
       "actualCount": 0,
-      "missingCodes": [
-        "5347",
-        "3707",
-        "5274",
-        "8299",
-        "3260",
-        "3324",
-        "3363",
-        "3163",
-        "5371",
-        "3491",
-        "8446",
-        "4577",
-        "00687B"
-      ],
-      "resolved": {},
-      "stale": true,
-      "complete": false,
+      "missingCodes": [],
+      "resolved": {
+        "3163": "no_history",
+        "3260": "no_history",
+        "3324": "no_history",
+        "3363": "no_history",
+        "3491": "no_history",
+        "3707": "no_history",
+        "4577": "no_history",
+        "5274": "no_history",
+        "5347": "no_history",
+        "5371": "no_history",
+        "8299": "no_history",
+        "8446": "no_history",
+        "00687B": "no_history"
+      },
+      "stale": false,
+      "complete": true,
       "fullMarket": {
         "count": 10634,
         "snapshotDate": "2026-08-20"
       },
-      "lastSuccessfulWrite": "2026-08-21T07:54:03.819Z"
+      "lastSuccessfulWrite": "2026-08-21T07:54:03.819Z",
+      "health": "resolved-empty"
     },
     "us": {
       "sessionDate": "2026-08-20",
@@ -108,7 +110,7 @@
       "health": "healthy"
     },
     "idxTw": {
-      "sessionDate": "2026-08-20",
+      "sessionDate": "2026-08-21",
       "expectedCount": 1,
       "actualCount": 1,
       "missingCodes": [],
