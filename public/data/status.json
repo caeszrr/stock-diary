@@ -1,19 +1,19 @@
 {
   "tw": {
-    "lastRun": "2026-08-20T09:59:45.704Z",
-    "latestSessionDate": "2026-08-20",
+    "lastRun": "2026-08-21T07:53:47.621Z",
+    "latestSessionDate": "2026-08-21",
     "watchlistCount": 67,
-    "fullMarketCount": 1377,
+    "fullMarketCount": 1376,
     "ok": true,
     "complete": true
   },
   "tpex": {
-    "lastRun": "2026-08-20T09:59:59.305Z",
+    "lastRun": "2026-08-21T07:54:03.819Z",
     "latestSessionDate": "2026-08-20",
-    "watchlistCount": 13,
+    "watchlistCount": 0,
     "fullMarketCount": 10634,
-    "ok": true,
-    "complete": true
+    "ok": false,
+    "complete": false
   },
   "us": {
     "lastRun": "2026-08-20T23:53:41.309Z",
@@ -50,7 +50,7 @@
   },
   "coverage": {
     "tw": {
-      "sessionDate": "2026-08-20",
+      "sessionDate": "2026-08-21",
       "expectedCount": 67,
       "actualCount": 67,
       "missingCodes": [],
@@ -58,27 +58,39 @@
       "stale": false,
       "complete": true,
       "fullMarket": {
-        "count": 1377,
-        "snapshotDate": "2026-08-19",
+        "count": 1376,
+        "snapshotDate": "2026-08-20",
         "taiex": true
       },
-      "lastSuccessfulWrite": "2026-08-20T09:59:45.704Z",
-      "health": "healthy"
+      "lastSuccessfulWrite": "2026-08-21T07:53:47.620Z"
     },
     "tpex": {
-      "sessionDate": "2026-08-20",
+      "sessionDate": "2026-08-21",
       "expectedCount": 13,
-      "actualCount": 13,
-      "missingCodes": [],
+      "actualCount": 0,
+      "missingCodes": [
+        "5347",
+        "3707",
+        "5274",
+        "8299",
+        "3260",
+        "3324",
+        "3363",
+        "3163",
+        "5371",
+        "3491",
+        "8446",
+        "4577",
+        "00687B"
+      ],
       "resolved": {},
-      "stale": false,
-      "complete": true,
+      "stale": true,
+      "complete": false,
       "fullMarket": {
         "count": 10634,
         "snapshotDate": "2026-08-20"
       },
-      "lastSuccessfulWrite": "2026-08-20T09:59:59.304Z",
-      "health": "healthy"
+      "lastSuccessfulWrite": "2026-08-21T07:54:03.819Z"
     },
     "us": {
       "sessionDate": "2026-08-20",
