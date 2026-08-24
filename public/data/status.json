@@ -1,19 +1,19 @@
 {
   "tw": {
-    "lastRun": "2026-08-21T08:59:11.110Z",
-    "latestSessionDate": "2026-08-21",
+    "lastRun": "2026-08-24T08:02:59.563Z",
+    "latestSessionDate": "2026-08-24",
     "watchlistCount": 67,
-    "fullMarketCount": 1376,
+    "fullMarketCount": 1377,
     "ok": true,
     "complete": true
   },
   "tpex": {
-    "lastRun": "2026-08-21T08:59:12.420Z",
-    "latestSessionDate": "2026-08-21",
-    "watchlistCount": 13,
-    "fullMarketCount": 10584,
-    "ok": true,
-    "complete": true
+    "lastRun": "2026-08-24T08:04:03.517Z",
+    "latestSessionDate": "2026-08-24",
+    "watchlistCount": 12,
+    "fullMarketCount": 10474,
+    "ok": false,
+    "complete": false
   },
   "us": {
     "lastRun": "2026-08-22T23:49:59.771Z",
@@ -50,7 +50,7 @@
   },
   "coverage": {
     "tw": {
-      "sessionDate": "2026-08-21",
+      "sessionDate": "2026-08-24",
       "expectedCount": 67,
       "actualCount": 67,
       "missingCodes": [],
@@ -58,27 +58,27 @@
       "stale": false,
       "complete": true,
       "fullMarket": {
-        "count": 1376,
-        "snapshotDate": "2026-08-20",
+        "count": 1377,
+        "snapshotDate": "2026-08-21",
         "taiex": true
       },
-      "lastSuccessfulWrite": "2026-08-21T08:59:11.110Z",
-      "health": "healthy"
+      "lastSuccessfulWrite": "2026-08-24T08:02:59.563Z"
     },
     "tpex": {
-      "sessionDate": "2026-08-21",
+      "sessionDate": "2026-08-24",
       "expectedCount": 13,
-      "actualCount": 13,
-      "missingCodes": [],
+      "actualCount": 12,
+      "missingCodes": [
+        "5371"
+      ],
       "resolved": {},
       "stale": false,
-      "complete": true,
+      "complete": false,
       "fullMarket": {
-        "count": 10584,
-        "snapshotDate": "2026-08-21"
+        "count": 10474,
+        "snapshotDate": "2026-08-24"
       },
-      "lastSuccessfulWrite": "2026-08-21T08:59:12.420Z",
-      "health": "healthy"
+      "lastSuccessfulWrite": "2026-08-24T08:04:03.517Z"
     },
     "us": {
       "sessionDate": "2026-08-21",
