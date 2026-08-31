@@ -69,18 +69,18 @@
       "sessionDate": "2026-08-31",
       "expectedCount": 13,
       "actualCount": 12,
-      "missingCodes": [],
-      "resolved": {
-        "5371": "no_history"
-      },
+      "missingCodes": [
+        "5371"
+      ],
+      "resolved": {},
       "stale": false,
-      "complete": true,
+      "complete": false,
       "fullMarket": {
         "count": 10713,
         "snapshotDate": "2026-08-31"
       },
       "lastSuccessfulWrite": "2026-08-31T16:10:14.918Z",
-      "health": "resolved-empty"
+      "health": "healthy"
     },
     "us": {
       "sessionDate": "2026-08-28",
