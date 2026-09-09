@@ -1,6 +1,6 @@
 {
   "tw": {
-    "lastRun": "2026-09-09T12:18:37.952Z",
+    "lastRun": "2026-09-09T12:58:28.769Z",
     "latestSessionDate": "2026-09-09",
     "watchlistCount": 67,
     "fullMarketCount": 1382,
@@ -8,7 +8,7 @@
     "complete": true
   },
   "tpex": {
-    "lastRun": "2026-09-09T12:18:44.746Z",
+    "lastRun": "2026-09-09T12:58:40.750Z",
     "latestSessionDate": "2026-09-09",
     "watchlistCount": 12,
     "fullMarketCount": 11020,
@@ -62,25 +62,23 @@
         "snapshotDate": "2026-09-08",
         "taiex": true
       },
-      "lastSuccessfulWrite": "2026-09-09T12:18:37.952Z",
-      "health": "healthy"
+      "lastSuccessfulWrite": "2026-09-09T12:58:28.769Z"
     },
     "tpex": {
       "sessionDate": "2026-09-09",
       "expectedCount": 13,
       "actualCount": 12,
-      "missingCodes": [],
-      "resolved": {
-        "5371": "no_history"
-      },
+      "missingCodes": [
+        "5371"
+      ],
+      "resolved": {},
       "stale": false,
-      "complete": true,
+      "complete": false,
       "fullMarket": {
         "count": 11020,
         "snapshotDate": "2026-09-09"
       },
-      "lastSuccessfulWrite": "2026-09-09T12:18:44.745Z",
-      "health": "resolved-empty"
+      "lastSuccessfulWrite": "2026-09-09T12:58:40.750Z"
     },
     "us": {
       "sessionDate": "2026-09-08",
