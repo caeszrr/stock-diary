@@ -16,13 +16,13 @@
     "complete": false
   },
   "us": {
-    "lastRun": "2026-09-19T01:30:40.726Z",
+    "lastRun": "2026-09-20T00:14:11.259Z",
     "latestSessionDate": "2026-09-18",
-    "watchlistCount": 12,
+    "watchlistCount": 20,
     "indexCount": 4,
     "failures": [],
-    "ok": false,
-    "complete": false
+    "ok": true,
+    "complete": true
   },
   "backfill": {
     "lastRun": "2026-07-26T14:43:23.132Z",
@@ -94,8 +94,7 @@
         "indices": "4/4",
         "calendarExpected": "2026-09-18"
       },
-      "lastSuccessfulWrite": "2026-09-19T01:30:40.725Z",
-      "health": "healthy"
+      "lastSuccessfulWrite": "2026-09-20T00:14:11.258Z"
     },
     "idxTw": {
       "sessionDate": "2026-09-18",
