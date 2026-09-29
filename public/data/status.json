@@ -1,7 +1,7 @@
 {
   "tw": {
-    "lastRun": "2026-09-28T16:45:49.097Z",
-    "latestSessionDate": "2026-09-24",
+    "lastRun": "2026-09-29T14:01:11.688Z",
+    "latestSessionDate": "2026-09-29",
     "watchlistCount": 67,
     "fullMarketCount": 1380,
     "ok": true,
@@ -50,7 +50,7 @@
   },
   "coverage": {
     "tw": {
-      "sessionDate": "2026-09-24",
+      "sessionDate": "2026-09-29",
       "expectedCount": 67,
       "actualCount": 67,
       "missingCodes": [],
@@ -62,8 +62,7 @@
         "snapshotDate": "2026-09-24",
         "taiex": true
       },
-      "lastSuccessfulWrite": "2026-09-28T16:45:49.097Z",
-      "health": "healthy"
+      "lastSuccessfulWrite": "2026-09-29T14:01:11.688Z"
     },
     "tpex": {
       "sessionDate": "2026-09-24",
