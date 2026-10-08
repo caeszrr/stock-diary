@@ -50,7 +50,7 @@
   },
   "coverage": {
     "tw": {
-      "sessionDate": "2026-10-07",
+      "sessionDate": "2026-10-08",
       "expectedCount": 67,
       "actualCount": 67,
       "missingCodes": [],
@@ -66,15 +66,28 @@
       "health": "healthy"
     },
     "tpex": {
-      "sessionDate": "2026-10-07",
+      "sessionDate": "2026-10-08",
       "expectedCount": 13,
-      "actualCount": 12,
-      "missingCodes": [],
+      "actualCount": 0,
+      "missingCodes": [
+        "5371"
+      ],
       "resolved": {
-        "5371": "no_history"
+        "3163": "no_history",
+        "3260": "no_history",
+        "3324": "no_history",
+        "3363": "no_history",
+        "3491": "no_history",
+        "3707": "no_history",
+        "4577": "no_history",
+        "5274": "no_history",
+        "5347": "no_history",
+        "8299": "no_history",
+        "8446": "no_history",
+        "00687B": "no_history"
       },
       "stale": false,
-      "complete": true,
+      "complete": false,
       "fullMarket": {
         "count": 12245,
         "snapshotDate": "2026-10-07"
@@ -98,7 +111,7 @@
       "health": "healthy"
     },
     "idxTw": {
-      "sessionDate": "2026-10-07",
+      "sessionDate": "2026-10-08",
       "expectedCount": 1,
       "actualCount": 1,
       "missingCodes": [],
