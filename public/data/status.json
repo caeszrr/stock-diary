@@ -69,32 +69,54 @@
       "sessionDate": "2026-10-13",
       "expectedCount": 13,
       "actualCount": 12,
-      "missingCodes": [],
-      "resolved": {
-        "5371": "no_history"
-      },
+      "missingCodes": [
+        "5371"
+      ],
+      "resolved": {},
       "stale": false,
-      "complete": true,
+      "complete": false,
       "fullMarket": {
         "count": 12421,
         "snapshotDate": "2026-10-13"
       },
       "lastSuccessfulWrite": "2026-10-13T16:00:03.491Z",
-      "health": "resolved-empty"
+      "health": "healthy"
     },
     "us": {
-      "sessionDate": "2026-10-12",
+      "sessionDate": "2026-10-13",
       "expectedCount": 20,
-      "actualCount": 20,
-      "missingCodes": [],
+      "actualCount": 0,
+      "missingCodes": [
+        "ARM",
+        "NVDA",
+        "AMD",
+        "MRVL",
+        "TSM",
+        "INTC",
+        "MU",
+        "SNDK",
+        "STX",
+        "DRAM",
+        "LITE",
+        "GLW",
+        "GOOG",
+        "AAPL",
+        "AMZN",
+        "TSLA",
+        "ORCL",
+        "SPCX",
+        "MP",
+        "GOOP"
+      ],
       "resolved": {},
-      "stale": true,
-      "complete": true,
+      "stale": false,
+      "complete": false,
       "fullMarket": {
         "indices": "4/4",
         "calendarExpected": "2026-10-13"
       },
-      "lastSuccessfulWrite": "2026-10-14T01:19:24.629Z"
+      "lastSuccessfulWrite": "2026-10-14T01:19:24.629Z",
+      "health": "gap"
     },
     "idxTw": {
       "sessionDate": "2026-10-13",
@@ -108,7 +130,7 @@
       "health": "healthy"
     },
     "idxUs": {
-      "sessionDate": "2026-10-12",
+      "sessionDate": "2026-10-13",
       "expectedCount": 4,
       "actualCount": 4,
       "missingCodes": [],
