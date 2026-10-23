@@ -27,6 +27,7 @@
     "2026-09-28",
     "2026-10-09",
     "2026-10-10",
+    "2026-10-23",
     "2026-10-25",
     "2026-10-26",
     "2026-12-25"
@@ -82,12 +83,22 @@
   "twDiscovered": [
     {
       "date": "2026-07-10",
-      "confirmedAt": "2026-08-05T16:43:43.615Z",
       "evidence": {
         "wallClock": "passed",
         "twse": "healthy-empty",
         "tpex": "healthy-empty",
         "confirmedAt": "2026-08-05T16:43:43.615Z"
+      },
+      "confirmedAt": "2026-08-05T16:43:43.615Z"
+    },
+    {
+      "date": "2026-10-23",
+      "confirmedAt": "2026-10-23T12:52:46.384Z",
+      "evidence": {
+        "wallClock": "passed",
+        "twse": "healthy-empty",
+        "tpex": "healthy-empty",
+        "confirmedAt": "2026-10-23T12:52:46.384Z"
       }
     }
   ]
