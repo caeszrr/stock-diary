@@ -16,8 +16,8 @@
     "complete": false
   },
   "us": {
-    "lastRun": "2026-10-23T00:48:10.323Z",
-    "latestSessionDate": "2026-10-21",
+    "lastRun": "2026-10-23T01:51:00.134Z",
+    "latestSessionDate": "2026-10-22",
     "watchlistCount": 20,
     "indexCount": 4,
     "failures": [],
@@ -85,38 +85,16 @@
     "us": {
       "sessionDate": "2026-10-22",
       "expectedCount": 20,
-      "actualCount": 0,
-      "missingCodes": [
-        "ARM",
-        "NVDA",
-        "AMD",
-        "MRVL",
-        "TSM",
-        "INTC",
-        "MU",
-        "SNDK",
-        "STX",
-        "DRAM",
-        "LITE",
-        "GLW",
-        "GOOG",
-        "AAPL",
-        "AMZN",
-        "TSLA",
-        "ORCL",
-        "SPCX",
-        "MP",
-        "GOOP"
-      ],
+      "actualCount": 20,
+      "missingCodes": [],
       "resolved": {},
       "stale": false,
-      "complete": false,
+      "complete": true,
       "fullMarket": {
         "indices": "4/4",
         "calendarExpected": "2026-10-22"
       },
-      "lastSuccessfulWrite": "2026-10-23T00:48:10.323Z",
-      "health": "gap"
+      "lastSuccessfulWrite": "2026-10-23T01:51:00.133Z"
     },
     "idxTw": {
       "sessionDate": "2026-10-22",
