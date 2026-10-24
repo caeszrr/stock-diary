@@ -16,7 +16,7 @@
     "complete": false
   },
   "us": {
-    "lastRun": "2026-10-23T01:51:00.134Z",
+    "lastRun": "2026-10-24T00:55:09.314Z",
     "latestSessionDate": "2026-10-22",
     "watchlistCount": 20,
     "indexCount": 4,
@@ -88,14 +88,13 @@
       "actualCount": 20,
       "missingCodes": [],
       "resolved": {},
-      "stale": false,
+      "stale": true,
       "complete": true,
       "fullMarket": {
         "indices": "4/4",
-        "calendarExpected": "2026-10-22"
+        "calendarExpected": "2026-10-23"
       },
-      "lastSuccessfulWrite": "2026-10-23T01:51:00.133Z",
-      "health": "healthy"
+      "lastSuccessfulWrite": "2026-10-24T00:55:09.313Z"
     },
     "idxTw": {
       "sessionDate": "2026-10-22",
