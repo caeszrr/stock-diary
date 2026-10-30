@@ -1,17 +1,17 @@
 {
   "tw": {
-    "lastRun": "2026-10-29T15:14:17.826Z",
-    "latestSessionDate": "2026-10-29",
+    "lastRun": "2026-10-30T14:03:48.896Z",
+    "latestSessionDate": "2026-10-30",
     "watchlistCount": 67,
-    "fullMarketCount": 1386,
+    "fullMarketCount": 1388,
     "ok": true,
     "complete": true
   },
   "tpex": {
-    "lastRun": "2026-10-29T15:14:22.527Z",
-    "latestSessionDate": "2026-10-29",
+    "lastRun": "2026-10-30T14:04:56.664Z",
+    "latestSessionDate": "2026-10-30",
     "watchlistCount": 12,
-    "fullMarketCount": 13242,
+    "fullMarketCount": 13360,
     "ok": false,
     "complete": false
   },
@@ -58,42 +58,27 @@
       "stale": false,
       "complete": true,
       "fullMarket": {
-        "count": 1386,
-        "snapshotDate": "2026-10-28",
+        "count": 1388,
+        "snapshotDate": "2026-10-29",
         "taiex": true
       },
-      "lastSuccessfulWrite": "2026-10-29T15:14:17.826Z",
-      "health": "healthy"
+      "lastSuccessfulWrite": "2026-10-30T14:03:48.896Z"
     },
     "tpex": {
       "sessionDate": "2026-10-30",
       "expectedCount": 13,
-      "actualCount": 0,
+      "actualCount": 12,
       "missingCodes": [
         "5371"
       ],
-      "resolved": {
-        "3163": "no_history",
-        "3260": "no_history",
-        "3324": "no_history",
-        "3363": "no_history",
-        "3491": "no_history",
-        "3707": "no_history",
-        "4577": "no_history",
-        "5274": "no_history",
-        "5347": "no_history",
-        "8299": "no_history",
-        "8446": "no_history",
-        "00687B": "no_history"
-      },
+      "resolved": {},
       "stale": false,
       "complete": false,
       "fullMarket": {
-        "count": 13242,
-        "snapshotDate": "2026-10-29"
+        "count": 13360,
+        "snapshotDate": "2026-10-30"
       },
-      "lastSuccessfulWrite": "2026-10-29T15:14:22.527Z",
-      "health": "resolved-empty"
+      "lastSuccessfulWrite": "2026-10-30T14:04:56.663Z"
     },
     "us": {
       "sessionDate": "2026-10-29",
