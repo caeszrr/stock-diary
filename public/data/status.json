@@ -16,7 +16,7 @@
     "complete": false
   },
   "us": {
-    "lastRun": "2026-11-06T02:41:48.943Z",
+    "lastRun": "2026-11-06T03:36:41.958Z",
     "latestSessionDate": "2026-11-05",
     "watchlistCount": 20,
     "indexCount": 4,
@@ -94,8 +94,7 @@
         "indices": "4/4",
         "calendarExpected": "2026-11-05"
       },
-      "lastSuccessfulWrite": "2026-11-06T02:41:48.942Z",
-      "health": "healthy"
+      "lastSuccessfulWrite": "2026-11-06T03:36:41.958Z"
     },
     "idxTw": {
       "sessionDate": "2026-11-05",
