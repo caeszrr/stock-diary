@@ -16,8 +16,8 @@
     "complete": false
   },
   "us": {
-    "lastRun": "2026-11-12T04:05:26.725Z",
-    "latestSessionDate": "2026-11-11",
+    "lastRun": "2026-11-13T02:46:05.216Z",
+    "latestSessionDate": "2026-11-12",
     "watchlistCount": 20,
     "indexCount": 4,
     "failures": [],
@@ -83,7 +83,7 @@
       "health": "resolved-empty"
     },
     "us": {
-      "sessionDate": "2026-11-11",
+      "sessionDate": "2026-11-12",
       "expectedCount": 20,
       "actualCount": 20,
       "missingCodes": [],
@@ -92,10 +92,9 @@
       "complete": true,
       "fullMarket": {
         "indices": "4/4",
-        "calendarExpected": "2026-11-11"
+        "calendarExpected": "2026-11-12"
       },
-      "lastSuccessfulWrite": "2026-11-12T04:05:26.724Z",
-      "health": "healthy"
+      "lastSuccessfulWrite": "2026-11-13T02:46:05.216Z"
     },
     "idxTw": {
       "sessionDate": "2026-11-12",
