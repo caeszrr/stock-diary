@@ -16,7 +16,7 @@
     "complete": false
   },
   "us": {
-    "lastRun": "2026-11-20T03:38:35.402Z",
+    "lastRun": "2026-11-20T04:13:38.221Z",
     "latestSessionDate": "2026-11-19",
     "watchlistCount": 13,
     "indexCount": 4,
@@ -86,24 +86,23 @@
       "sessionDate": "2026-11-19",
       "expectedCount": 20,
       "actualCount": 13,
-      "missingCodes": [],
-      "resolved": {
-        "ARM": "no_trade",
-        "DRAM": "no_trade",
-        "LITE": "no_trade",
-        "GOOG": "no_trade",
-        "SPCX": "no_trade",
-        "MP": "no_trade",
-        "GOOP": "no_trade"
-      },
+      "missingCodes": [
+        "ARM",
+        "DRAM",
+        "LITE",
+        "GOOG",
+        "SPCX",
+        "MP",
+        "GOOP"
+      ],
+      "resolved": {},
       "stale": false,
-      "complete": true,
+      "complete": false,
       "fullMarket": {
         "indices": "4/4",
         "calendarExpected": "2026-11-19"
       },
-      "lastSuccessfulWrite": "2026-11-20T03:38:35.402Z",
-      "health": "resolved-empty"
+      "lastSuccessfulWrite": "2026-11-20T04:13:38.220Z"
     },
     "idxTw": {
       "sessionDate": "2026-11-19",
