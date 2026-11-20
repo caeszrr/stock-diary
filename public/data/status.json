@@ -1,17 +1,17 @@
 {
   "tw": {
-    "lastRun": "2026-11-19T17:23:02.825Z",
-    "latestSessionDate": "2026-11-19",
+    "lastRun": "2026-11-20T16:04:16.163Z",
+    "latestSessionDate": "2026-11-20",
     "watchlistCount": 67,
-    "fullMarketCount": 1391,
+    "fullMarketCount": 1393,
     "ok": true,
     "complete": true
   },
   "tpex": {
-    "lastRun": "2026-11-19T17:23:13.825Z",
-    "latestSessionDate": "2026-11-19",
+    "lastRun": "2026-11-20T16:04:26.562Z",
+    "latestSessionDate": "2026-11-20",
     "watchlistCount": 12,
-    "fullMarketCount": 13940,
+    "fullMarketCount": 13807,
     "ok": false,
     "complete": false
   },
@@ -58,48 +58,27 @@
       "stale": false,
       "complete": true,
       "fullMarket": {
-        "count": 1391,
-        "snapshotDate": "2026-11-18",
+        "count": 1393,
+        "snapshotDate": "2026-11-19",
         "taiex": true
       },
-      "lastSuccessfulWrite": "2026-11-19T17:23:02.825Z",
-      "health": "healthy",
-      "anomalies": {
-        "lowVolume": [
-          "3653"
-        ],
-        "repeatedSnapshot": []
-      }
+      "lastSuccessfulWrite": "2026-11-20T16:04:16.162Z"
     },
     "tpex": {
       "sessionDate": "2026-11-20",
       "expectedCount": 13,
-      "actualCount": 0,
+      "actualCount": 12,
       "missingCodes": [
         "5371"
       ],
-      "resolved": {
-        "3163": "no_history",
-        "3260": "no_history",
-        "3324": "no_history",
-        "3363": "no_history",
-        "3491": "no_history",
-        "3707": "no_history",
-        "4577": "no_history",
-        "5274": "no_history",
-        "5347": "no_history",
-        "8299": "no_history",
-        "8446": "no_history",
-        "00687B": "no_history"
-      },
+      "resolved": {},
       "stale": false,
       "complete": false,
       "fullMarket": {
-        "count": 13940,
-        "snapshotDate": "2026-11-19"
+        "count": 13807,
+        "snapshotDate": "2026-11-20"
       },
-      "lastSuccessfulWrite": "2026-11-19T17:23:13.825Z",
-      "health": "resolved-empty"
+      "lastSuccessfulWrite": "2026-11-20T16:04:26.562Z"
     },
     "us": {
       "sessionDate": "2026-11-19",
