@@ -69,40 +69,41 @@
       "sessionDate": "2026-11-19",
       "expectedCount": 13,
       "actualCount": 12,
-      "missingCodes": [],
-      "resolved": {
-        "5371": "no_history"
-      },
-      "stale": false,
-      "complete": true,
-      "fullMarket": {
-        "count": 13940,
-        "snapshotDate": "2026-11-19"
-      },
-      "lastSuccessfulWrite": "2026-11-19T17:23:13.825Z",
-      "health": "resolved-empty"
-    },
-    "us": {
-      "sessionDate": "2026-11-19",
-      "expectedCount": 20,
-      "actualCount": 13,
       "missingCodes": [
-        "ARM",
-        "DRAM",
-        "LITE",
-        "GOOG",
-        "SPCX",
-        "MP",
-        "GOOP"
+        "5371"
       ],
       "resolved": {},
       "stale": false,
       "complete": false,
       "fullMarket": {
+        "count": 13940,
+        "snapshotDate": "2026-11-19"
+      },
+      "lastSuccessfulWrite": "2026-11-19T17:23:13.825Z",
+      "health": "healthy"
+    },
+    "us": {
+      "sessionDate": "2026-11-19",
+      "expectedCount": 20,
+      "actualCount": 13,
+      "missingCodes": [],
+      "resolved": {
+        "ARM": "no_trade",
+        "DRAM": "no_trade",
+        "LITE": "no_trade",
+        "GOOG": "no_trade",
+        "SPCX": "no_trade",
+        "MP": "no_trade",
+        "GOOP": "no_trade"
+      },
+      "stale": false,
+      "complete": true,
+      "fullMarket": {
         "indices": "4/4",
         "calendarExpected": "2026-11-19"
       },
-      "lastSuccessfulWrite": "2026-11-20T03:38:35.402Z"
+      "lastSuccessfulWrite": "2026-11-20T03:38:35.402Z",
+      "health": "resolved-empty"
     },
     "idxTw": {
       "sessionDate": "2026-11-19",
@@ -116,7 +117,7 @@
       "health": "healthy"
     },
     "idxUs": {
-      "sessionDate": "2026-11-18",
+      "sessionDate": "2026-11-19",
       "expectedCount": 4,
       "actualCount": 4,
       "missingCodes": [],
