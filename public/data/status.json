@@ -50,7 +50,7 @@
   },
   "coverage": {
     "tw": {
-      "sessionDate": "2026-11-19",
+      "sessionDate": "2026-11-20",
       "expectedCount": 67,
       "actualCount": 67,
       "missingCodes": [],
@@ -63,18 +63,37 @@
         "taiex": true
       },
       "lastSuccessfulWrite": "2026-11-19T17:23:02.825Z",
-      "health": "healthy"
+      "health": "healthy",
+      "anomalies": {
+        "lowVolume": [
+          "3653"
+        ],
+        "repeatedSnapshot": []
+      }
     },
     "tpex": {
-      "sessionDate": "2026-11-19",
+      "sessionDate": "2026-11-20",
       "expectedCount": 13,
-      "actualCount": 12,
-      "missingCodes": [],
+      "actualCount": 0,
+      "missingCodes": [
+        "5371"
+      ],
       "resolved": {
-        "5371": "no_history"
+        "3163": "no_history",
+        "3260": "no_history",
+        "3324": "no_history",
+        "3363": "no_history",
+        "3491": "no_history",
+        "3707": "no_history",
+        "4577": "no_history",
+        "5274": "no_history",
+        "5347": "no_history",
+        "8299": "no_history",
+        "8446": "no_history",
+        "00687B": "no_history"
       },
       "stale": false,
-      "complete": true,
+      "complete": false,
       "fullMarket": {
         "count": 13940,
         "snapshotDate": "2026-11-19"
@@ -98,7 +117,7 @@
       "health": "healthy"
     },
     "idxTw": {
-      "sessionDate": "2026-11-19",
+      "sessionDate": "2026-11-20",
       "expectedCount": 1,
       "actualCount": 1,
       "missingCodes": [],
