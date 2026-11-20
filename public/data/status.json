@@ -16,13 +16,13 @@
     "complete": false
   },
   "us": {
-    "lastRun": "2026-11-19T04:27:18.535Z",
-    "latestSessionDate": "2026-11-18",
-    "watchlistCount": 20,
+    "lastRun": "2026-11-20T03:38:35.402Z",
+    "latestSessionDate": "2026-11-19",
+    "watchlistCount": 13,
     "indexCount": 4,
     "failures": [],
-    "ok": true,
-    "complete": true
+    "ok": false,
+    "complete": false
   },
   "backfill": {
     "lastRun": "2026-07-26T14:43:23.132Z",
@@ -83,19 +83,26 @@
       "health": "resolved-empty"
     },
     "us": {
-      "sessionDate": "2026-11-18",
+      "sessionDate": "2026-11-19",
       "expectedCount": 20,
-      "actualCount": 20,
-      "missingCodes": [],
+      "actualCount": 13,
+      "missingCodes": [
+        "ARM",
+        "DRAM",
+        "LITE",
+        "GOOG",
+        "SPCX",
+        "MP",
+        "GOOP"
+      ],
       "resolved": {},
       "stale": false,
-      "complete": true,
+      "complete": false,
       "fullMarket": {
         "indices": "4/4",
-        "calendarExpected": "2026-11-18"
+        "calendarExpected": "2026-11-19"
       },
-      "lastSuccessfulWrite": "2026-11-19T04:27:18.534Z",
-      "health": "healthy"
+      "lastSuccessfulWrite": "2026-11-20T03:38:35.402Z"
     },
     "idxTw": {
       "sessionDate": "2026-11-19",
