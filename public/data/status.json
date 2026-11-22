@@ -75,35 +75,35 @@
       "sessionDate": "2026-11-20",
       "expectedCount": 13,
       "actualCount": 12,
-      "missingCodes": [],
-      "resolved": {
-        "5371": "no_history"
-      },
+      "missingCodes": [
+        "5371"
+      ],
+      "resolved": {},
       "stale": false,
-      "complete": true,
+      "complete": false,
       "fullMarket": {
         "count": 13807,
         "snapshotDate": "2026-11-20"
       },
       "lastSuccessfulWrite": "2026-11-20T16:58:50.560Z",
-      "health": "resolved-empty"
+      "health": "healthy"
     },
     "us": {
       "sessionDate": "2026-11-20",
       "expectedCount": 20,
       "actualCount": 19,
-      "missingCodes": [],
-      "resolved": {
-        "SNDK": "no_trade"
-      },
+      "missingCodes": [
+        "SNDK"
+      ],
+      "resolved": {},
       "stale": false,
-      "complete": true,
+      "complete": false,
       "fullMarket": {
         "indices": "4/4",
         "calendarExpected": "2026-11-20"
       },
       "lastSuccessfulWrite": "2026-11-22T03:25:14.461Z",
-      "health": "resolved-empty"
+      "health": "healthy"
     },
     "idxTw": {
       "sessionDate": "2026-11-20",
