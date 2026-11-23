@@ -62,43 +62,45 @@
         "snapshotDate": "2026-11-20",
         "taiex": true
       },
-      "lastSuccessfulWrite": "2026-11-23T19:11:23.710Z"
+      "lastSuccessfulWrite": "2026-11-23T19:11:23.710Z",
+      "health": "healthy"
     },
     "tpex": {
       "sessionDate": "2026-11-23",
       "expectedCount": 13,
       "actualCount": 12,
-      "missingCodes": [
-        "5371"
-      ],
-      "resolved": {},
+      "missingCodes": [],
+      "resolved": {
+        "5371": "no_history"
+      },
       "stale": false,
-      "complete": false,
+      "complete": true,
       "fullMarket": {
         "count": 13810,
         "snapshotDate": "2026-11-23"
       },
-      "lastSuccessfulWrite": "2026-11-23T19:11:32.659Z"
+      "lastSuccessfulWrite": "2026-11-23T19:11:32.659Z",
+      "health": "resolved-empty"
     },
     "us": {
       "sessionDate": "2026-11-20",
       "expectedCount": 20,
       "actualCount": 19,
-      "missingCodes": [],
-      "resolved": {
-        "SNDK": "no_trade"
-      },
+      "missingCodes": [
+        "SNDK"
+      ],
+      "resolved": {},
       "stale": false,
-      "complete": true,
+      "complete": false,
       "fullMarket": {
         "indices": "4/4",
         "calendarExpected": "2026-11-20"
       },
       "lastSuccessfulWrite": "2026-11-22T03:25:14.461Z",
-      "health": "resolved-empty"
+      "health": "healthy"
     },
     "idxTw": {
-      "sessionDate": "2026-11-20",
+      "sessionDate": "2026-11-23",
       "expectedCount": 1,
       "actualCount": 1,
       "missingCodes": [],
