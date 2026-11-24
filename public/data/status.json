@@ -1,17 +1,17 @@
 {
   "tw": {
-    "lastRun": "2026-11-23T20:14:09.906Z",
-    "latestSessionDate": "2026-11-23",
+    "lastRun": "2026-11-24T18:50:56.836Z",
+    "latestSessionDate": "2026-11-24",
     "watchlistCount": 67,
-    "fullMarketCount": 1393,
+    "fullMarketCount": 1394,
     "ok": true,
     "complete": true
   },
   "tpex": {
-    "lastRun": "2026-11-23T20:14:20.936Z",
-    "latestSessionDate": "2026-11-23",
+    "lastRun": "2026-11-24T18:51:06.220Z",
+    "latestSessionDate": "2026-11-24",
     "watchlistCount": 12,
-    "fullMarketCount": 13810,
+    "fullMarketCount": 13849,
     "ok": false,
     "complete": false
   },
@@ -50,7 +50,7 @@
   },
   "coverage": {
     "tw": {
-      "sessionDate": "2026-11-23",
+      "sessionDate": "2026-11-24",
       "expectedCount": 67,
       "actualCount": 67,
       "missingCodes": [],
@@ -58,29 +58,27 @@
       "stale": false,
       "complete": true,
       "fullMarket": {
-        "count": 1393,
-        "snapshotDate": "2026-11-20",
+        "count": 1394,
+        "snapshotDate": "2026-11-23",
         "taiex": true
       },
-      "lastSuccessfulWrite": "2026-11-23T20:14:09.906Z",
-      "health": "healthy"
+      "lastSuccessfulWrite": "2026-11-24T18:50:56.836Z"
     },
     "tpex": {
-      "sessionDate": "2026-11-23",
+      "sessionDate": "2026-11-24",
       "expectedCount": 13,
       "actualCount": 12,
-      "missingCodes": [],
-      "resolved": {
-        "5371": "no_history"
-      },
+      "missingCodes": [
+        "5371"
+      ],
+      "resolved": {},
       "stale": false,
-      "complete": true,
+      "complete": false,
       "fullMarket": {
-        "count": 13810,
-        "snapshotDate": "2026-11-23"
+        "count": 13849,
+        "snapshotDate": "2026-11-24"
       },
-      "lastSuccessfulWrite": "2026-11-23T20:14:20.935Z",
-      "health": "resolved-empty"
+      "lastSuccessfulWrite": "2026-11-24T18:51:06.220Z"
     },
     "us": {
       "sessionDate": "2026-11-23",
