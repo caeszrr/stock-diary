@@ -1,17 +1,17 @@
 {
   "tw": {
-    "lastRun": "2026-11-24T19:30:37.026Z",
-    "latestSessionDate": "2026-11-24",
+    "lastRun": "2026-11-25T17:56:06.115Z",
+    "latestSessionDate": "2026-11-25",
     "watchlistCount": 67,
     "fullMarketCount": 1394,
     "ok": true,
     "complete": true
   },
   "tpex": {
-    "lastRun": "2026-11-24T19:30:46.199Z",
-    "latestSessionDate": "2026-11-24",
+    "lastRun": "2026-11-25T17:56:16.969Z",
+    "latestSessionDate": "2026-11-25",
     "watchlistCount": 12,
-    "fullMarketCount": 13849,
+    "fullMarketCount": 13830,
     "ok": false,
     "complete": false
   },
@@ -59,68 +59,26 @@
       "complete": true,
       "fullMarket": {
         "count": 1394,
-        "snapshotDate": "2026-11-23",
+        "snapshotDate": "2026-11-24",
         "taiex": true
       },
-      "lastSuccessfulWrite": "2026-11-24T19:30:37.026Z",
-      "health": "healthy",
-      "anomalies": {
-        "lowVolume": [
-          "2454",
-          "3443",
-          "6770",
-          "2408",
-          "2344",
-          "2337",
-          "6239",
-          "3037",
-          "2383",
-          "6213",
-          "2313",
-          "4958",
-          "2308",
-          "3017",
-          "3653",
-          "3008",
-          "6209",
-          "2327",
-          "3026",
-          "2492",
-          "1802",
-          "3481",
-          "2409"
-        ],
-        "repeatedSnapshot": []
-      }
+      "lastSuccessfulWrite": "2026-11-25T17:56:06.114Z"
     },
     "tpex": {
       "sessionDate": "2026-11-25",
       "expectedCount": 13,
-      "actualCount": 0,
+      "actualCount": 12,
       "missingCodes": [
-        "5347",
-        "3707",
-        "5274",
-        "8299",
-        "3260",
-        "3324",
-        "3363",
-        "3163",
-        "5371",
-        "3491",
-        "8446",
-        "4577",
-        "00687B"
+        "5371"
       ],
       "resolved": {},
       "stale": false,
       "complete": false,
       "fullMarket": {
-        "count": 13849,
-        "snapshotDate": "2026-11-24"
+        "count": 13830,
+        "snapshotDate": "2026-11-25"
       },
-      "lastSuccessfulWrite": "2026-11-24T19:30:46.199Z",
-      "health": "healthy"
+      "lastSuccessfulWrite": "2026-11-25T17:56:16.968Z"
     },
     "us": {
       "sessionDate": "2026-11-24",
