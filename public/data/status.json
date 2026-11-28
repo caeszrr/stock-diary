@@ -16,13 +16,13 @@
     "complete": false
   },
   "us": {
-    "lastRun": "2026-11-27T05:17:41.102Z",
-    "latestSessionDate": "2026-11-25",
-    "watchlistCount": 19,
+    "lastRun": "2026-11-28T04:04:09.637Z",
+    "latestSessionDate": "2026-11-27",
+    "watchlistCount": 20,
     "indexCount": 4,
     "failures": [],
-    "ok": false,
-    "complete": false
+    "ok": true,
+    "complete": true
   },
   "backfill": {
     "lastRun": "2026-07-26T14:43:23.132Z",
@@ -83,21 +83,18 @@
       "health": "resolved-empty"
     },
     "us": {
-      "sessionDate": "2026-11-25",
+      "sessionDate": "2026-11-27",
       "expectedCount": 20,
-      "actualCount": 19,
-      "missingCodes": [
-        "SNDK"
-      ],
+      "actualCount": 20,
+      "missingCodes": [],
       "resolved": {},
       "stale": false,
-      "complete": false,
+      "complete": true,
       "fullMarket": {
         "indices": "4/4",
-        "calendarExpected": "2026-11-25"
+        "calendarExpected": "2026-11-27"
       },
-      "lastSuccessfulWrite": "2026-11-27T05:17:41.102Z",
-      "health": "healthy"
+      "lastSuccessfulWrite": "2026-11-28T04:04:09.636Z"
     },
     "idxTw": {
       "sessionDate": "2026-11-27",
